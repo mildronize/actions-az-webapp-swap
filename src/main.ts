@@ -1,8 +1,10 @@
 import * as core from '@actions/core';
 import { wait } from './wait';
+import fs from 'fs';
 import { executeBatchProcess, executeProcess } from './utility';
 import { stripIndent } from 'common-tags';
-import { IAppSetting, ISwapAppService } from './interfaces/ISwapAppService';
+import { ISwapAppSetting, ISwapAppService, AppSettingProperty } from './interfaces/ISwapAppService';
+import { validateInput } from './validateInput';
 
 // async function run(): Promise<void> {
 //   try {
@@ -20,41 +22,35 @@ import { IAppSetting, ISwapAppService } from './interfaces/ISwapAppService';
 // }
 
 const azureCommands = {
-  webAppListApplicationSettings: (name: string, resourceGroup: string) => stripIndent`
+  webAppListAppSettings: (name: string, resourceGroup: string) => stripIndent`
     az webapp config appsettings list \\
         --name ${name} \\
         --resource-group ${resourceGroup}
 `,
 };
 
-async function webAppListApplicationSettings(name: string, resourceGroup: string): Promise<IAppSetting[]> {
-  const result = await executeProcess(azureCommands.webAppListApplicationSettings(name, resourceGroup));
+async function webAppListAppSettings(name: string, resourceGroup: string): Promise<ISwapAppSetting[]> {
+  const result = await executeProcess(azureCommands.webAppListAppSettings(name, resourceGroup));
   if (result.stdout instanceof Buffer) {
     return JSON.parse(result.stdout.toString());
   }
   return JSON.parse(result.stdout || '');
 }
 
-async function validateInput(input: ISwapAppService[]) {}
-
 async function main() {
-  const input: ISwapAppService[] = [
-    {
-      name: 'thadaw-demo-multi-app-ant',
-      resourceGroup: 'rg-thadaw-demo-multi-app',
-      slot: 'production',
-      targetSlot: 'staging',
-      defaultSlotSetting: 'required',
-      defaultSensitive: 'required',
-      appSettings: [
-        { name: 'ANOTHER', sensitive: false, slotSetting: true },
-        { name: 'Test', sensitive: true, slotSetting: true },
-      ],
-    },
-  ];
-  validateInput(input);
-  const result = await webAppListApplicationSettings('thadaw-demo-multi-app-ant', 'rg-thadaw-demo-multi-app');
-  console.log(result);
+  const swapAppServiceConfigs: ISwapAppService[] = JSON.parse(fs.readFileSync('./input.json', 'utf8'));
+  validateInput(swapAppServiceConfigs);
+
+  const listAppSettingWorkers: Promise<ISwapAppSetting[]>[] = [];
+
+  for (const config of swapAppServiceConfigs) {
+    console.log(config.name);
+    listAppSettingWorkers.push(webAppListAppSettings(config.name, config.resourceGroup));
+  }
+  const result = await Promise.all(listAppSettingWorkers);
+
+  // const result: IAppSetting[] = await webAppListAppSettings('thadaw-demo-multi-app-ant', 'rg-thadaw-demo-multi-app');
+  // console.log(result);
 }
 
 main();

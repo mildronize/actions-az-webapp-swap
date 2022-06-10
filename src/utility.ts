@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { spawn } from 'promisify-child-process';
 
 interface IOption {
@@ -27,4 +28,9 @@ export async function executeProcess(command: string, option?: IOption) {
   });
 
   return await childProcess;
+}
+
+export function hashValue(value: string) {
+  const sha256Hasher = crypto.createHmac('sha3-512', process.env.HASH_SECRET || '');
+  return sha256Hasher.update(value).digest('base64');
 }

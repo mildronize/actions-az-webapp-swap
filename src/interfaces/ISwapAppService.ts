@@ -1,9 +1,19 @@
-export type AppSettingProperty = 'true' | 'false' | 'required';
+export enum AppSettingProperty {
+  true = 'true',
+  false = 'false',
+  required = 'required',
+}
 
-export interface IAppSetting {
+export interface ISwapAppSetting {
   name: string;
   sensitive: boolean;
   slotSetting: boolean;
+}
+
+export interface IAppSetting {
+  name: string;
+  slotSetting: boolean;
+  value: string;
 }
 
 export interface ISwapAppService {
@@ -13,5 +23,5 @@ export interface ISwapAppService {
   targetSlot: string;
   defaultSlotSetting: AppSettingProperty;
   defaultSensitive: AppSettingProperty;
-  appSettings: IAppSetting[];
+  appSettings: ISwapAppSetting[];
 }
