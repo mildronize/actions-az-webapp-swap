@@ -2,12 +2,13 @@ export enum AppSettingProperty {
   true = 'true',
   false = 'false',
   required = 'required',
+  default = 'default',
 }
 
 export interface ISwapAppSetting {
   name: string;
-  sensitive: boolean;
-  slotSetting: boolean;
+  sensitive?: boolean;
+  slotSetting?: boolean;
 }
 
 export interface IAppSetting {
