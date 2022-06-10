@@ -1,6 +1,6 @@
 import { expect, test } from '@jest/globals';
 import { AppSettingProperty } from '../src/interfaces/ISwapAppService';
-import { SwapAppSettings, validateUniqueAppSettingsName } from '../src/validateInput';
+import SwapAppSettings, { validateUniqueAppSettingsName } from '../src/validation/SwapAppSettings';
 
 test('test validateAppSettings slotSettings in Pass Case', () => {
   const swapAppService = {

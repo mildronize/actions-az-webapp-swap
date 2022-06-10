@@ -1,35 +1,4 @@
-import { ISwapAppService, AppSettingProperty, ISwapAppSetting, IAppSetting } from './interfaces/ISwapAppService';
-import { z } from 'zod';
-import { exit } from 'process';
-
-const AppSettingSchema = z.object({
-  name: z.string(),
-  sensitive: z.boolean().optional(),
-  slotSetting: z.boolean().optional(),
-});
-
-// creating a schema for strings
-const SwapAppServiceSchema = z.array(
-  z.object({
-    name: z.string(),
-    resourceGroup: z.string(),
-    slot: z.string(),
-    targetSlot: z.string(),
-    defaultSlotSetting: z.nativeEnum(AppSettingProperty),
-    defaultSensitive: z.nativeEnum(AppSettingProperty),
-    appSettings: z.array(AppSettingSchema),
-  })
-);
-
-export function validateInput(input: ISwapAppService[]) {
-  const result = SwapAppServiceSchema.safeParse(input);
-  if (!result.success) {
-    const formatted = result.error.format();
-    // TODO: Make Human readable error message
-    console.error(JSON.stringify(formatted, null, 2));
-    exit(1);
-  }
-}
+import { ISwapAppService, AppSettingProperty, ISwapAppSetting, IAppSetting } from '../interfaces/ISwapAppService';
 
 export interface IValidateAppSettingsReturnType {
   success: boolean;
@@ -46,7 +15,7 @@ export function validateUniqueAppSettingsName(appSettings: Pick<IAppSetting, 'na
   }
 }
 
-export class SwapAppSettings {
+export default class SwapAppSettings {
   private appSettingKeys: string[] = [];
   constructor(
     private swapAppService: Pick<ISwapAppService, 'appSettings' | 'defaultSensitive' | 'defaultSlotSetting'>,
