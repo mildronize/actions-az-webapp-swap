@@ -1,4 +1,4 @@
-import { ISwapAppService, AppSettingProperty, ISwapAppSetting, IAppSetting } from '../interfaces/ISwapAppService';
+import { ISwapAppService, DefaultSensitiveEnum, DefaultSlotSettingEnum, ISwapAppSetting, IAppSetting } from '../interfaces/ISwapAppService';
 import { z } from 'zod';
 
 const AppSettingSchema = z.object({
@@ -14,8 +14,8 @@ const SwapAppServiceSchema = z.array(
     resourceGroup: z.string(),
     slot: z.string(),
     targetSlot: z.string(),
-    defaultSlotSetting: z.nativeEnum(AppSettingProperty),
-    defaultSensitive: z.nativeEnum(AppSettingProperty),
+    defaultSlotSetting: z.nativeEnum(DefaultSlotSettingEnum),
+    defaultSensitive: z.nativeEnum(DefaultSensitiveEnum),
     appSettings: z.array(AppSettingSchema),
   })
 );

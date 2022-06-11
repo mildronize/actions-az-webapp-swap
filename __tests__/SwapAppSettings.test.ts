@@ -1,11 +1,11 @@
 import { expect, test } from '@jest/globals';
-import { AppSettingProperty } from '../src/interfaces/ISwapAppService';
+import { DefaultSensitiveEnum, DefaultSlotSettingEnum } from '../src/interfaces/ISwapAppService';
 import SwapAppSettings, { validateUniqueAppSettingsName } from '../src/validation/SwapAppSettings';
 
 test('test validateAppSettings slotSettings in Pass Case', () => {
   const swapAppService = {
-    defaultSensitive: AppSettingProperty.default,
-    defaultSlotSetting: AppSettingProperty.required,
+    defaultSensitive: DefaultSensitiveEnum.true,
+    defaultSlotSetting: DefaultSlotSettingEnum.required,
     appSettings: [
       {
         name: 'ANOTHER',
@@ -38,8 +38,8 @@ test('test validateAppSettings slotSettings in Pass Case', () => {
 
 test('test validateAppSettings slotSettings in Fail Case', () => {
   const swapAppService = {
-    defaultSensitive: AppSettingProperty.default,
-    defaultSlotSetting: AppSettingProperty.required,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.required,
     appSettings: [
       {
         name: 'Test',
@@ -68,8 +68,8 @@ test('test validateAppSettings slotSettings in Fail Case', () => {
 
 test('test validateAppSettings Partial slotSettings in Fail Case', () => {
   const swapAppService = {
-    defaultSensitive: AppSettingProperty.default,
-    defaultSlotSetting: AppSettingProperty.required,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.required,
     appSettings: [
       {
         name: 'ANOTHER',
@@ -102,8 +102,8 @@ test('test validateAppSettings Partial slotSettings in Fail Case', () => {
 
 test('test validateAppSettings sensitive in Pass Case', () => {
   const swapAppService = {
-    defaultSensitive: AppSettingProperty.required,
-    defaultSlotSetting: AppSettingProperty.default,
+    defaultSensitive: DefaultSensitiveEnum.required,
+    defaultSlotSetting: DefaultSlotSettingEnum.inherit,
     appSettings: [
       {
         name: 'ANOTHER',
@@ -136,8 +136,8 @@ test('test validateAppSettings sensitive in Pass Case', () => {
 
 test('test validateAppSettings sensitive in Fail Case', () => {
   const swapAppService = {
-    defaultSensitive: AppSettingProperty.required,
-    defaultSlotSetting: AppSettingProperty.default,
+    defaultSensitive: DefaultSensitiveEnum.required,
+    defaultSlotSetting: DefaultSlotSettingEnum.inherit,
     appSettings: [
       {
         name: 'Test',
@@ -166,8 +166,8 @@ test('test validateAppSettings sensitive in Fail Case', () => {
 
 test('test validateAppSettings partial sensitive in Fail Case', () => {
   const swapAppService = {
-    defaultSensitive: AppSettingProperty.required,
-    defaultSlotSetting: AppSettingProperty.default,
+    defaultSensitive: DefaultSensitiveEnum.required,
+    defaultSlotSetting: DefaultSlotSettingEnum.inherit,
     appSettings: [
       {
         name: 'ANOTHER',

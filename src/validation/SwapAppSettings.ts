@@ -1,4 +1,4 @@
-import { ISwapAppService, AppSettingProperty, ISwapAppSetting, IAppSetting } from '../interfaces/ISwapAppService';
+import { ISwapAppService, DefaultSensitiveEnum, DefaultSlotSettingEnum, ISwapAppSetting, IAppSetting } from '../interfaces/ISwapAppService';
 
 export interface IValidateAppSettingsReturnType {
   success: boolean;
@@ -41,7 +41,7 @@ export default class SwapAppSettings {
   }
 
   private validateSlotSettings() {
-    if (this.swapAppService.defaultSlotSetting === AppSettingProperty.required) {
+    if (this.swapAppService.defaultSlotSetting === DefaultSlotSettingEnum.required) {
       let count = 0;
       for (const appSetting of this.swapAppService.appSettings) {
         if (this.appSettingKeys.indexOf(appSetting.name) != -1 && appSetting.slotSetting !== undefined) count++;
@@ -59,7 +59,7 @@ export default class SwapAppSettings {
   }
 
   private validateSensitive() {
-    if (this.swapAppService.defaultSensitive === AppSettingProperty.required) {
+    if (this.swapAppService.defaultSensitive === DefaultSensitiveEnum.required) {
       let count = 0;
       for (const appSetting of this.swapAppService.appSettings) {
         if (this.appSettingKeys.indexOf(appSetting.name) != -1 && appSetting.sensitive !== undefined) count++;

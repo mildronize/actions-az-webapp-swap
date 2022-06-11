@@ -2,7 +2,7 @@
 import fs from 'fs';
 import { ISwapAppService, IAppSetting } from './interfaces/ISwapAppService';
 import InputValidation from './validation/InputValidation';
-import { ValueMasking } from './core/ValueMasking';
+import AppSettingsMasking from './core/AppSettingsMasking';
 import SwapAppSettings from './validation/SwapAppSettings';
 import { webAppListAppSettings } from './utils/azureCLI';
 
@@ -24,7 +24,7 @@ async function main() {
     const result = new SwapAppSettings(swapAppService, appSettings).validate();
     if (!result.success) throw new Error(result.error);
     // Make appSettings as sensitve if they are requested
-    appSettingsList[i] = new ValueMasking(swapAppService, appSettings).mask();
+    appSettingsList[i] = new AppSettingsMasking(swapAppService, appSettings).mask();
   }
 }
 

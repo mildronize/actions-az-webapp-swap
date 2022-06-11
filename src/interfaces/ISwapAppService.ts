@@ -1,8 +1,14 @@
-export enum AppSettingProperty {
+export enum DefaultSensitiveEnum {
+  true = 'true',
+  false = 'false',
+  required = 'required'
+}
+
+export enum DefaultSlotSettingEnum {
   true = 'true',
   false = 'false',
   required = 'required',
-  default = 'default',
+  inherit = 'inherit'
 }
 
 export interface ISwapAppSetting {
@@ -22,7 +28,7 @@ export interface ISwapAppService {
   resourceGroup: string;
   slot: string;
   targetSlot: string;
-  defaultSlotSetting: AppSettingProperty;
-  defaultSensitive: AppSettingProperty;
+  defaultSlotSetting: DefaultSlotSettingEnum;
+  defaultSensitive: DefaultSensitiveEnum;
   appSettings: ISwapAppSetting[];
 }
