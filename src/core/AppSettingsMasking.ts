@@ -12,7 +12,7 @@ export default class AppSettingsMasking {
     private appSettings: IAppSetting[]
   ) {}
 
-  public mask() {
+  public run() {
     const { appSettings: swapAppSettings, defaultSensitive} = this.swapAppService;
     // for(const swapAppSetting of swapAppSettings ){
 

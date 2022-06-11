@@ -31,7 +31,7 @@ test('test validateAppSettings slotSettings in Pass Case', () => {
       slotSetting: true,
     },
   ];
-  expect(new SwapAppSettings(swapAppService, appSettings).validate()).toStrictEqual({
+  expect(new SwapAppSettings(swapAppService, appSettings).run()).toStrictEqual({
     success: true,
   });
 });
@@ -60,7 +60,7 @@ test('test validateAppSettings slotSettings in Fail Case', () => {
       slotSetting: true,
     },
   ];
-  expect(new SwapAppSettings(swapAppService, appSettings).validate()).toStrictEqual({
+  expect(new SwapAppSettings(swapAppService, appSettings).run()).toStrictEqual({
     success: false,
     error: 'All slotSettings is required',
   });
@@ -94,7 +94,7 @@ test('test validateAppSettings Partial slotSettings in Fail Case', () => {
       slotSetting: true,
     },
   ];
-  expect(new SwapAppSettings(swapAppService, appSettings).validate()).toStrictEqual({
+  expect(new SwapAppSettings(swapAppService, appSettings).run()).toStrictEqual({
     success: false,
     error: 'All slotSettings is required',
   });
@@ -129,7 +129,7 @@ test('test validateAppSettings sensitive in Pass Case', () => {
       slotSetting: true,
     },
   ];
-  expect(new SwapAppSettings(swapAppService, appSettings).validate()).toStrictEqual({
+  expect(new SwapAppSettings(swapAppService, appSettings).run()).toStrictEqual({
     success: true,
   });
 });
@@ -158,7 +158,7 @@ test('test validateAppSettings sensitive in Fail Case', () => {
       slotSetting: true,
     },
   ];
-  expect(new SwapAppSettings(swapAppService, appSettings).validate()).toStrictEqual({
+  expect(new SwapAppSettings(swapAppService, appSettings).run()).toStrictEqual({
     success: false,
     error: 'All sensitve is required',
   });
@@ -192,7 +192,7 @@ test('test validateAppSettings partial sensitive in Fail Case', () => {
       slotSetting: true,
     },
   ];
-  expect(new SwapAppSettings(swapAppService, appSettings).validate()).toStrictEqual({
+  expect(new SwapAppSettings(swapAppService, appSettings).run()).toStrictEqual({
     success: false,
     error: 'All sensitve is required',
   });

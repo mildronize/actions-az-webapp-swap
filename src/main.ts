@@ -3,8 +3,9 @@ import fs from 'fs';
 import { ISwapAppService, IAppSetting } from './interfaces/ISwapAppService';
 import InputValidation from './validation/InputValidation';
 import AppSettingsMasking from './core/AppSettingsMasking';
-import SwapAppSettings from './validation/SwapAppSettings';
+import SwapAppSettingsValidation from './validation/SwapAppSettings';
 import { webAppListAppSettings } from './utils/azureCLI';
+import SwapAppSettingsSync from './core/SwapAppSettingsSync';
 
 async function main() {
   const swapAppServiceList: ISwapAppService[] = JSON.parse(fs.readFileSync('./input.json', 'utf8'));
@@ -18,13 +19,14 @@ async function main() {
   }
   const appSettingsList = await Promise.all(listAppSettingWorkers);
   for (let i = 0; i < swapAppServiceList.length; i++) {
-    const swapAppService = swapAppServiceList[i];
-    const appSettings = appSettingsList[i];
+    let swapAppService = swapAppServiceList[i];
+    let appSettings = appSettingsList[i];
     // validate appSettings
-    const result = new SwapAppSettings(swapAppService, appSettings).validate();
+    const result = new SwapAppSettingsValidation(swapAppService, appSettings).run();
     if (!result.success) throw new Error(result.error);
+    swapAppService = new SwapAppSettingsSync(swapAppService, appSettings).run();
     // Make appSettings as sensitve if they are requested
-    appSettingsList[i] = new AppSettingsMasking(swapAppService, appSettings).mask();
+    appSettings = new AppSettingsMasking(swapAppService, appSettings).run();
   }
 }
 

@@ -15,14 +15,14 @@ export function validateUniqueAppSettingsName(appSettings: Pick<IAppSetting, 'na
   }
 }
 
-export default class SwapAppSettings {
+export default class SwapAppSettingsValidation {
   private appSettingKeys: string[] = [];
   constructor(
     private swapAppService: Pick<ISwapAppService, 'appSettings' | 'defaultSensitive' | 'defaultSlotSetting'>,
     private appSettings: IAppSetting[]
   ) {}
 
-  public validate() {
+  public run() {
     validateUniqueAppSettingsName(this.appSettings);
     validateUniqueAppSettingsName(this.swapAppService.appSettings);
 
