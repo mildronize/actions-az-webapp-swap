@@ -4,7 +4,7 @@
     "resourceGroup": "rg-thadaw-demo-multi-app",
     "slot": "production",
     "targetSlot": "staging",
-    "defaultSlotSetting": "required",
+    "defaultSlotSetting": "true",
     "defaultSensitive": "required",
     "appSettings": [
       {
@@ -16,31 +16,12 @@
         "name": "Test",
         "sensitive": true,
         "slotSetting": true
-      }
-    ]
-  },
-  {
-    "name": "thadaw-demo-multi-app-cat",
-    "resourceGroup": "rg-thadaw-demo-multi-app",
-    "slot": "production",
-    "targetSlot": "staging",
-    "defaultSlotSetting": "required",
-    "defaultSensitive": "required",
-    "appSettings": [
+      },
       {
-        "name": "Test",
-        "sensitive": true
+        "name": "URL",
+        "sensitive": false,
+        "slotSetting": true
       }
-    ]
-  },
-  {
-    "name": "thadaw-demo-multi-app-dog",
-    "resourceGroup": "rg-thadaw-demo-multi-app",
-    "slot": "production",
-    "targetSlot": "staging",
-    "defaultSlotSetting": "required",
-    "defaultSensitive": "required",
-    "appSettings": [
     ]
   }
 ]

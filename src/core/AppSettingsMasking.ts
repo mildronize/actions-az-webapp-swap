@@ -8,19 +8,18 @@ export function hashValue(value: string) {
 
 export default class AppSettingsMasking {
   constructor(
-    private swapAppService: Pick<ISwapAppService, 'appSettings' | 'defaultSensitive' >,
+    private swapAppService: Pick<ISwapAppService, 'appSettings' | 'defaultSensitive'>,
     private appSettings: IAppSetting[]
   ) {}
 
   public run() {
-    const { appSettings: swapAppSettings, defaultSensitive} = this.swapAppService;
+    const { appSettings: swapAppSettings, defaultSensitive } = this.swapAppService;
     // for(const swapAppSetting of swapAppSettings ){
 
-
-    //   this.appSettings = 
-    //     this.appSettings.map( 
-    //       appSetting => appSetting.name === swapAppSetting.name 
-    //       && 
+    //   this.appSettings =
+    //     this.appSettings.map(
+    //       appSetting => appSetting.name === swapAppSetting.name
+    //       &&
     //       ?
 
     //      )

@@ -1,20 +1,21 @@
 export enum DefaultSensitiveEnum {
   true = 'true',
   false = 'false',
-  required = 'required'
+  required = 'required',
 }
 
 export enum DefaultSlotSettingEnum {
   true = 'true',
   false = 'false',
   required = 'required',
-  inherit = 'inherit'
+  inherit = 'inherit',
 }
 
 export interface ISwapAppSetting {
   name: string;
   sensitive?: boolean;
   slotSetting?: boolean;
+  slots?: string[];
 }
 
 export interface IAppSetting {

@@ -1,4 +1,10 @@
-import { ISwapAppService, DefaultSensitiveEnum, DefaultSlotSettingEnum, ISwapAppSetting, IAppSetting } from '../interfaces/ISwapAppService';
+import {
+  ISwapAppService,
+  DefaultSensitiveEnum,
+  DefaultSlotSettingEnum,
+  ISwapAppSetting,
+  IAppSetting,
+} from '../interfaces/ISwapAppService';
 
 export interface IValidateAppSettingsReturnType {
   success: boolean;
