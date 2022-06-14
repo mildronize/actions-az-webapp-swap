@@ -9,9 +9,11 @@ export default class SwapAppSettings {
   constructor(private swapAppService: ISwapAppService) {}
 
   private isAppSettingExisting(name: string) {
-    const found = this.swapAppService.appSettings.filter(appSetting => appSetting.name === name);
-    if (found.length >= 1) return true;
-    return false;
+    let index = 0;
+    for (const appSetting of this.swapAppService.appSettings) {
+      if (appSetting.name === name) return index++;
+    }
+    return -1;
   }
   /**
    * Expected result
@@ -24,7 +26,8 @@ export default class SwapAppSettings {
       throw new Error(`Cannot fulfill swap app service from giving app setting because all sensitive is required`);
 
     for (const appSetting of appSettings) {
-      if (!this.isAppSettingExisting(appSetting.name)) {
+      const found = this.isAppSettingExisting(appSetting.name);
+      if (found < 0) {
         // Prepare Sensitive
         const sensitive =
           this.swapAppService.defaultSensitive === DefaultSensitiveEnum.false ? false : FallbackValue.sensitive;
@@ -40,13 +43,25 @@ export default class SwapAppSettings {
           name: appSetting.name,
           sensitive,
           slotSetting,
+          // It will use for merging between 2 app settings
+          baseSlotSetting: appSetting.slotSetting,
         });
+      } else {
+        // If existing it will merge between 2 app settings
+        const tmpAppSetting = this.swapAppService.appSettings[found];
+        if (tmpAppSetting.baseSlotSetting) {
+          tmpAppSetting.baseSlotSetting = tmpAppSetting.baseSlotSetting || appSetting.slotSetting;
+        } else {
+          tmpAppSetting.baseSlotSetting = appSetting.slotSetting;
+        }
+        tmpAppSetting.slotSetting = tmpAppSetting.baseSlotSetting || appSetting.slotSetting;
       }
     }
 
     for (const appSetting of this.swapAppService.appSettings) {
       if (appSetting.slots) appSetting.slots.push(slot);
       else appSetting.slots = [slot];
+      // if (appSetting.baseSlotSetting) appSetting.baseSlotSetting = appSetting.baseSlotSetting || this.swapAppService.appSettings
     }
     console.log(this.swapAppService.appSettings);
     return this.swapAppService;

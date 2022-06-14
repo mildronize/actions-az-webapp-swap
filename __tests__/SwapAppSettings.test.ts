@@ -107,6 +107,7 @@ test('test SwapAppSettings slotSettings if one app setting is missing (defaultSl
         name: 'config_1',
         sensitive: false,
         slotSetting: true,
+        baseSlotSetting: true,
         slots: ['production'],
       },
       // This field is fullfill by giving appSettings from production slot
@@ -114,6 +115,7 @@ test('test SwapAppSettings slotSettings if one app setting is missing (defaultSl
         name: 'config_2',
         sensitive: false,
         slotSetting: false,
+        baseSlotSetting: true,
         slots: ['production'],
       },
     ],
@@ -155,6 +157,7 @@ test('test SwapAppSettings slotSettings if one app setting is missing (defaultSl
         name: 'config_1',
         sensitive: false,
         slotSetting: true,
+        baseSlotSetting: true,
         slots: ['production'],
       },
       // This field is fullfill by giving appSettings from production slot
@@ -162,6 +165,7 @@ test('test SwapAppSettings slotSettings if one app setting is missing (defaultSl
         name: 'config_2',
         sensitive: false,
         slotSetting: true,
+        baseSlotSetting: false,
         slots: ['production'],
       },
     ],
@@ -203,6 +207,7 @@ test('test SwapAppSettings slotSettings if one app setting is missing (defaultSl
         name: 'config_1',
         sensitive: false,
         slotSetting: true,
+        baseSlotSetting: true,
         slots: ['production'],
       },
       // This field is fullfill by giving appSettings from production slot
@@ -210,6 +215,7 @@ test('test SwapAppSettings slotSettings if one app setting is missing (defaultSl
         name: 'config_2',
         sensitive: false,
         slotSetting: true,
+        baseSlotSetting: true,
         slots: ['production'],
       },
     ],
@@ -252,6 +258,7 @@ test('test SwapAppSettings sensitive if one app setting is missing (defaultSensi
         name: 'config_1',
         sensitive: false,
         slotSetting: true,
+        baseSlotSetting: true,
         slots: ['production'],
       },
       // This field is fullfill by giving appSettings from production slot
@@ -259,7 +266,170 @@ test('test SwapAppSettings sensitive if one app setting is missing (defaultSensi
         name: 'config_2',
         sensitive: true,
         slotSetting: false,
+        baseSlotSetting: true,
         slots: ['production'],
+      },
+    ],
+  });
+});
+
+test('test SwapAppSettings which fullfill can be stacked', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.true,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  let swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+      },
+    ],
+  };
+  const appSettings: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'false',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: '',
+      slotSetting: true,
+    },
+  ];
+
+  const swapAppSettings = new SwapAppSettings(swapAppService);
+  swapAppService = swapAppSettings.fullfill(appSettings, 'production');
+  expect(swapAppService).toStrictEqual({
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+        baseSlotSetting: true,
+        slots: ['production'],
+      },
+      // This field is fullfill by giving appSettings from production slot
+      {
+        name: 'config_2',
+        sensitive: true,
+        slotSetting: false,
+        baseSlotSetting: true,
+        slots: ['production'],
+      },
+    ],
+  });
+  swapAppService = swapAppSettings.fullfill(appSettings, 'staging');
+  expect(swapAppService).toStrictEqual({
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+        baseSlotSetting: true,
+        slots: ['production', 'staging'],
+      },
+      // This field is fullfill by giving appSettings from production slot
+      {
+        name: 'config_2',
+        sensitive: true,
+        slotSetting: false,
+        baseSlotSetting: true,
+        slots: ['production', 'staging'],
+      },
+    ],
+  });
+});
+
+test('test SwapAppSettings which fullfill can be merged', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.true,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  let swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: false,
+      },
+    ],
+  };
+  const appSettings: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'false',
+      slotSetting: false,
+    },
+    {
+      name: 'config_2',
+      value: '',
+      slotSetting: true,
+    },
+  ];
+
+  const swapAppSettings = new SwapAppSettings(swapAppService);
+  swapAppService = swapAppSettings.fullfill(appSettings, 'production');
+  expect(swapAppService).toStrictEqual({
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: false,
+        baseSlotSetting: false,
+        slots: ['production'],
+      },
+      // This field is fullfill by giving appSettings from production slot
+      {
+        name: 'config_2',
+        sensitive: true,
+        slotSetting: false,
+        baseSlotSetting: true,
+        slots: ['production'],
+      },
+    ],
+  });
+
+  const stagingAppSettings: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'false',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: '',
+      slotSetting: true,
+    },
+  ];
+
+  swapAppService = swapAppSettings.fullfill(stagingAppSettings, 'staging');
+  expect(swapAppService).toStrictEqual({
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+        baseSlotSetting: true,
+        slots: ['production', 'staging'],
+      },
+      // This field is fullfill by giving appSettings from production slot
+      {
+        name: 'config_2',
+        sensitive: true,
+        slotSetting: false,
+        baseSlotSetting: true,
+        slots: ['production', 'staging'],
       },
     ],
   });
