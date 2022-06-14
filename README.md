@@ -1,6 +1,21 @@
 
 - set deploy slot in main slot only
 
+## Usage 
+
+```yaml
+- uses: azure/login@v1
+  with:
+    creds: ${{ inputs.azure_credentials }}
+
+- name: Get Deploy Slot
+  uses: mildronize/actions-az-webapp-swap@v0.0.1
+  with:
+    mode: get-deploy-slots
+    # See sample config in `input.json`
+    config: ${{ inputs.JSON_CONFIG }}
+  
+```
 
 ---
 
