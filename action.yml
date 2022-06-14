@@ -1,11 +1,16 @@
 name: 'Your name here'
 description: 'Provide a description here'
-author: 'Your name or organization here'
+author: 'Thada'
 inputs:
-  milliseconds: # change this
+  mode:
     required: true
     description: 'input description here'
     default: 'default value if applicable'
+  config:
+    required: false
+    description: 'input description here'
+    default: 'default value if applicable'
+
 runs:
   using: 'node16'
   main: 'dist/index.js'

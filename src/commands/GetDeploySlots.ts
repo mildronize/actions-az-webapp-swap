@@ -6,15 +6,14 @@ import AppSettingsMasking from '../core/AppSettingsMasking';
 import SwapAppSettingsValidation from '../validation/SwapAppSettings';
 import { webAppListAppSettings } from '../utils/azureCLI';
 import SwapAppSettings from '../core/SwapAppSettings';
-import { ICommand } from '../interfaces/ICommand';
 
-export class GetDeploySlots implements ICommand {
+export class GetDeploySlots {
   constructor() {}
 
-  public async execute() {
+  public async execute(swapAppServiceList: ISwapAppService[]) {
     core.debug(`Using get-deploy-slots mode`);
 
-    const swapAppServiceList: ISwapAppService[] = JSON.parse(fs.readFileSync('./input.json', 'utf8'));
+    // const swapAppServiceList: ISwapAppService[] = JSON.parse(fs.readFileSync('./input.json', 'utf8'));
     new InputValidation(swapAppServiceList).validate();
 
     const appSettingSourceSlotWorkers: Promise<IAppSetting[]>[] = [];

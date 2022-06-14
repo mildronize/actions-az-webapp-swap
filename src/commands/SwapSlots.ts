@@ -1,7 +1,6 @@
 import * as core from '@actions/core';
-import { ICommand } from '../interfaces/ICommand';
 
-export class SwapSlots implements ICommand {
+export class SwapSlots {
   constructor() {}
 
   public async execute() {

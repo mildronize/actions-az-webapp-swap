@@ -1,7 +1,6 @@
 import * as core from '@actions/core';
-import { ICommand } from '../interfaces/ICommand';
 
-export class SetDeploySlots implements ICommand {
+export class SetDeploySlots {
   constructor() {}
 
   public async execute() {
