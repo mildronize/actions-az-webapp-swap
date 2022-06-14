@@ -41,9 +41,14 @@ async function main() {
     swapAppService = swapAppSettings.fullfill(appSettingsSourceSlot, swapAppService.slot);
     swapAppService = swapAppSettings.fullfill(appSettingsTargetSlot, swapAppService.targetSlot);
 
-    // // Make appSettings as sensitve if they are requested
-    // appSettingsSourceSlot = new AppSettingsMasking(swapAppService, appSettingsSourceSlot).run();
+    // Make appSettings as sensitve if they are requested
+    const appSettingMasking = new AppSettingsMasking(swapAppService);
+    appSettingsSourceSlot = appSettingMasking.mask(appSettingsSourceSlot, swapAppService.slot);
+    appSettingsTargetSlot = appSettingMasking.mask(appSettingsTargetSlot, swapAppService.targetSlot);
   }
+
+  fs.writeFileSync('source.json', JSON.stringify(appSettingsSourceSlotList, null, 2), 'utf8');
+  fs.writeFileSync('target.json', JSON.stringify(appSettingsTargetSlotList, null, 2), 'utf8');
 }
 
 main();

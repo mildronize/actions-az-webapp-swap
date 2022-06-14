@@ -32,6 +32,10 @@ export interface ISwapAppSetting {
    * slots -- Slot location where the app setting will be appiled
    */
   slots?: string[];
+  /**
+   * value - app setting value
+   */
+  value?: string;
 }
 
 export interface IAppSetting {

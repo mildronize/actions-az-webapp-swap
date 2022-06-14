@@ -14,63 +14,63 @@ const globalConfig = {
   targetSlot: 'staging',
 };
 
-test('test SwapAppSettings slotSettings in Fail Case', () => {
-  const sharedConfig = {
-    ...globalConfig,
-    defaultSensitive: DefaultSensitiveEnum.false,
-    defaultSlotSetting: DefaultSlotSettingEnum.required,
-  };
-  const swapAppService: ISwapAppService = {
-    ...sharedConfig,
-    appSettings: [
-      {
-        name: 'config_1',
-        sensitive: false,
-        slotSetting: true,
-      },
-    ],
-  };
-  const appSettings: IAppSetting[] = [
-    {
-      name: 'config_1',
-      value: 'false',
-      slotSetting: true,
-    },
-  ];
+// test('test SwapAppSettings slotSettings in Fail Case', () => {
+//   const sharedConfig = {
+//     ...globalConfig,
+//     defaultSensitive: DefaultSensitiveEnum.false,
+//     defaultSlotSetting: DefaultSlotSettingEnum.required,
+//   };
+//   const swapAppService: ISwapAppService = {
+//     ...sharedConfig,
+//     appSettings: [
+//       {
+//         name: 'config_1',
+//         sensitive: false,
+//         slotSetting: true,
+//       },
+//     ],
+//   };
+//   const appSettings: IAppSetting[] = [
+//     {
+//       name: 'config_1',
+//       value: 'false',
+//       slotSetting: true,
+//     },
+//   ];
 
-  expect(() => new SwapAppSettings(swapAppService).fullfill(appSettings, 'production')).toThrow(
-    `Cannot fulfill swap app service from giving app setting because all slotSettings is required`
-  );
-});
+//   expect(() => new SwapAppSettings(swapAppService).fullfill(appSettings, 'production')).toThrow(
+//     `Cannot fulfill swap app service from giving app setting because all slotSettings is required`
+//   );
+// });
 
-test('test SwapAppSettings SensitiveEnum in Fail Case', () => {
-  const sharedConfig = {
-    ...globalConfig,
-    defaultSensitive: DefaultSensitiveEnum.required,
-    defaultSlotSetting: DefaultSlotSettingEnum.false,
-  };
-  const swapAppService: ISwapAppService = {
-    ...sharedConfig,
-    appSettings: [
-      {
-        name: 'config_1',
-        sensitive: false,
-        slotSetting: true,
-      },
-    ],
-  };
-  const appSettings: IAppSetting[] = [
-    {
-      name: 'config_1',
-      value: 'false',
-      slotSetting: true,
-    },
-  ];
+// test('test SwapAppSettings SensitiveEnum in Fail Case', () => {
+//   const sharedConfig = {
+//     ...globalConfig,
+//     defaultSensitive: DefaultSensitiveEnum.required,
+//     defaultSlotSetting: DefaultSlotSettingEnum.false,
+//   };
+//   const swapAppService: ISwapAppService = {
+//     ...sharedConfig,
+//     appSettings: [
+//       {
+//         name: 'config_1',
+//         sensitive: false,
+//         slotSetting: true,
+//       },
+//     ],
+//   };
+//   const appSettings: IAppSetting[] = [
+//     {
+//       name: 'config_1',
+//       value: 'false',
+//       slotSetting: true,
+//     },
+//   ];
 
-  expect(() => new SwapAppSettings(swapAppService).fullfill(appSettings, 'production')).toThrow(
-    `Cannot fulfill swap app service from giving app setting because all sensitive is required`
-  );
-});
+//   expect(() => new SwapAppSettings(swapAppService).fullfill(appSettings, 'production')).toThrow(
+//     `Cannot fulfill swap app service from giving app setting because all sensitive is required`
+//   );
+// });
 
 test('test SwapAppSettings slotSettings if one app setting is missing (defaultSlotSetting = false)', () => {
   const sharedConfig = {

@@ -1,5 +1,7 @@
+import * as core from '@actions/core';
 import { ISwapAppService, IAppSetting } from '../interfaces/ISwapAppService';
 import crypto from 'crypto';
+import { isSwapAppSettingExisting } from '../utils/swapAppSettingsUtility';
 
 export function hashValue(value: string) {
   const sha256Hasher = crypto.createHmac('sha3-512', process.env.HASH_SECRET || '');
@@ -7,23 +9,24 @@ export function hashValue(value: string) {
 }
 
 export default class AppSettingsMasking {
-  constructor(
-    private swapAppService: Pick<ISwapAppService, 'appSettings' | 'defaultSensitive'>,
-    private appSettings: IAppSetting[]
-  ) {}
+  constructor(private swapAppService: ISwapAppService) {}
 
-  public run() {
-    const { appSettings: swapAppSettings, defaultSensitive } = this.swapAppService;
-    // for(const swapAppSetting of swapAppSettings ){
+  public mask(appSettings: IAppSetting[], slot?: string) {
+    const { appSettings: swapAppSettings } = this.swapAppService;
 
-    //   this.appSettings =
-    //     this.appSettings.map(
-    //       appSetting => appSetting.name === swapAppSetting.name
-    //       &&
-    //       ?
-
-    //      )
-    // }
-    return this.appSettings;
+    for (const swapAppSetting of swapAppSettings) {
+      if (swapAppSetting.sensitive === true) {
+        const found = isSwapAppSettingExisting(swapAppSetting.name, appSettings);
+        if (found >= 0) {
+          const foundAppSetting = appSettings[found];
+          foundAppSetting.value = hashValue(foundAppSetting.value);
+        } else {
+          core.warning(
+            `Cannot masking the app setting name "${swapAppSetting.name}" on app service "${this.swapAppService.name}/${slot}" because app setting name is not found`
+          );
+        }
+      }
+    }
+    return appSettings;
   }
 }

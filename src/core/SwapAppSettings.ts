@@ -4,32 +4,25 @@ import {
   DefaultSlotSettingEnum,
   DefaultSensitiveEnum,
 } from '../interfaces/ISwapAppService';
+import * as core from '@actions/core';
 import { FallbackValue } from '../constants';
+import { isSwapAppSettingExisting } from '../utils/swapAppSettingsUtility';
+
 export default class SwapAppSettings {
   constructor(private swapAppService: ISwapAppService) {}
 
-  private isAppSettingExisting(name: string) {
-    let index = 0;
-    for (const appSetting of this.swapAppService.appSettings) {
-      if (appSetting.name === name) return index;
-      index++;
-    }
-    return -1;
-  }
   /**
    * Expected result
    * Using `defaultSlotSetting` and `defaultSensitive` to generate fullfill JSON for non-required field
    */
   public fullfill(appSettings: IAppSetting[], slot: string) {
     if (this.swapAppService.defaultSlotSetting === DefaultSlotSettingEnum.required)
-      throw new Error(`Cannot fulfill swap app service from giving app setting because all slotSettings is required`);
+      core.warning(`Cannot fulfill swap app service from giving app setting because all slotSettings is required`);
     if (this.swapAppService.defaultSensitive === DefaultSensitiveEnum.required)
-      throw new Error(`Cannot fulfill swap app service from giving app setting because all sensitive is required`);
+      core.warning(`Cannot fulfill swap app service from giving app setting because all sensitive is required`);
 
-    let a = 0,
-      b = 0;
     for (const appSetting of appSettings) {
-      const found = this.isAppSettingExisting(appSetting.name);
+      const found = isSwapAppSettingExisting(appSetting.name, this.swapAppService.appSettings);
       if (found < 0) {
         // Prepare Sensitive
         const sensitive =
