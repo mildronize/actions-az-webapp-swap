@@ -11,7 +11,8 @@ export default class SwapAppSettings {
   private isAppSettingExisting(name: string) {
     let index = 0;
     for (const appSetting of this.swapAppService.appSettings) {
-      if (appSetting.name === name) return index++;
+      if (appSetting.name === name) return index;
+      index++;
     }
     return -1;
   }
@@ -25,6 +26,8 @@ export default class SwapAppSettings {
     if (this.swapAppService.defaultSensitive === DefaultSensitiveEnum.required)
       throw new Error(`Cannot fulfill swap app service from giving app setting because all sensitive is required`);
 
+    let a = 0,
+      b = 0;
     for (const appSetting of appSettings) {
       const found = this.isAppSettingExisting(appSetting.name);
       if (found < 0) {
@@ -49,21 +52,19 @@ export default class SwapAppSettings {
       } else {
         // If existing it will merge between 2 app settings
         const tmpAppSetting = this.swapAppService.appSettings[found];
-        if (tmpAppSetting.baseSlotSetting) {
+        if (tmpAppSetting.baseSlotSetting !== undefined) {
           tmpAppSetting.baseSlotSetting = tmpAppSetting.baseSlotSetting || appSetting.slotSetting;
+          tmpAppSetting.slotSetting = tmpAppSetting.slotSetting || appSetting.slotSetting;
         } else {
           tmpAppSetting.baseSlotSetting = appSetting.slotSetting;
         }
-        tmpAppSetting.slotSetting = tmpAppSetting.baseSlotSetting || appSetting.slotSetting;
       }
     }
 
     for (const appSetting of this.swapAppService.appSettings) {
       if (appSetting.slots) appSetting.slots.push(slot);
       else appSetting.slots = [slot];
-      // if (appSetting.baseSlotSetting) appSetting.baseSlotSetting = appSetting.baseSlotSetting || this.swapAppService.appSettings
     }
-    console.log(this.swapAppService.appSettings);
     return this.swapAppService;
   }
 }

@@ -273,6 +273,60 @@ test('test SwapAppSettings sensitive if one app setting is missing (defaultSensi
   });
 });
 
+test('test SwapAppSettings SlotSetting override exisitng app settings (defaultSlotSetting = true)', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.true,
+  };
+  const swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: true,
+      },
+    ],
+  };
+  const appSettings: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'false',
+      slotSetting: false,
+    },
+    {
+      name: 'config_2',
+      value: '',
+      slotSetting: false,
+    },
+  ];
+  expect(new SwapAppSettings(swapAppService).fullfill(appSettings, 'production')).toStrictEqual({
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+        baseSlotSetting: false,
+        slots: ['production'],
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: true,
+        baseSlotSetting: false,
+        slots: ['production'],
+      },
+    ],
+  });
+});
+
 test('test SwapAppSettings which fullfill can be stacked', () => {
   const sharedConfig = {
     ...globalConfig,
@@ -339,7 +393,7 @@ test('test SwapAppSettings which fullfill can be stacked', () => {
       {
         name: 'config_2',
         sensitive: true,
-        slotSetting: false,
+        slotSetting: true,
         baseSlotSetting: true,
         slots: ['production', 'staging'],
       },
@@ -427,7 +481,7 @@ test('test SwapAppSettings which fullfill can be merged', () => {
       {
         name: 'config_2',
         sensitive: true,
-        slotSetting: false,
+        slotSetting: true,
         baseSlotSetting: true,
         slots: ['production', 'staging'],
       },
