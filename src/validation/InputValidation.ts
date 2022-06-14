@@ -9,8 +9,10 @@ import { z } from 'zod';
 
 const AppSettingSchema = z.object({
   name: z.string(),
-  sensitive: z.boolean().optional(),
-  slotSetting: z.boolean().optional(),
+  // TODO: Make it optional later
+  sensitive: z.boolean(),
+  // TODO: Make it optional later
+  slotSetting: z.boolean(),
 });
 
 // creating a schema for strings

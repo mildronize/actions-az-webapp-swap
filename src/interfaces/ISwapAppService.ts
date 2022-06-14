@@ -13,8 +13,8 @@ export enum DefaultSlotSettingEnum {
 
 export interface ISwapAppSetting {
   name: string;
-  sensitive?: boolean;
-  slotSetting?: boolean;
+  sensitive: boolean;
+  slotSetting: boolean;
   slots?: string[];
 }
 

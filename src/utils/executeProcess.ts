@@ -28,4 +28,3 @@ export async function executeProcess(command: string, option?: IOption) {
 
   return await childProcess;
 }
-

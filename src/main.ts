@@ -7,11 +7,10 @@ import SwapAppSettingsValidation from './validation/SwapAppSettings';
 import { webAppListAppSettings } from './utils/azureCLI';
 import SwapAppSettings from './core/SwapAppSettings';
 
-function validateSwapAppServiceSlot(swapAppService: ISwapAppService, appSettings: IAppSetting[], slot: string){
+function validateSwapAppServiceSlot(swapAppService: ISwapAppService, appSettings: IAppSetting[], slot: string) {
   core.debug(`Validating SwapAppService config with slot: ${slot}`);
   const result = new SwapAppSettingsValidation(swapAppService, appSettings).run();
-  if (!result.success) 
-    throw new Error(`Invalid SwapAppService config with slot (${slot}): ${result.error}`);
+  if (!result.success) throw new Error(`Invalid SwapAppService config with slot (${slot}): ${result.error}`);
 }
 
 async function main() {
@@ -38,7 +37,7 @@ async function main() {
     // Validate appSettings for Target Slot
     validateSwapAppServiceSlot(swapAppService, appSettingsTargetSlot, swapAppService.targetSlot);
 
-    const swapAppSettings  = new SwapAppSettings(swapAppService);
+    const swapAppSettings = new SwapAppSettings(swapAppService);
     swapAppService = swapAppSettings.fullfill(appSettingsSourceSlot, swapAppService.slot);
     swapAppService = swapAppSettings.fullfill(appSettingsTargetSlot, swapAppService.targetSlot);
 
