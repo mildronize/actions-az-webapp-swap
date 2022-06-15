@@ -1,7 +1,14 @@
-import { spawn } from 'promisify-child-process';
+import { spawn, Output } from 'promisify-child-process';
 
 interface IOption {
   slient?: boolean;
+}
+
+export function parseJSON(output?: Output) {
+  if (output?.stdout instanceof Buffer) {
+    return JSON.parse(output?.stdout.toString());
+  }
+  return JSON.parse(output?.stdout || '');
 }
 
 export async function executeBatchProcess(commands: string[], option?: IOption) {
