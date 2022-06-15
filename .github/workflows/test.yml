@@ -35,6 +35,10 @@ jobs:
     needs: [ get-matrix ]
     steps:
       - uses: actions/checkout@v2
+      # SP: github action az webapp swap
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure_credentials }}
       - uses: ./
         with:
           mode: get-deploy-slots
