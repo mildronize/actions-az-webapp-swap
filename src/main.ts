@@ -4,15 +4,9 @@ import { ISwapAppService } from './interfaces/ISwapAppService';
 import { GetDeploySlots } from './commands/GetDeploySlots';
 import { SetDeploySlots } from './commands/SetDeploySlots';
 import { SwapSlots } from './commands/SwapSlots';
+import { isEmptyString } from './utils/commonUtility';
 
 export type Mode = 'get-deploy-slots' | 'set-deploy-slots' | 'swap-slots';
-
-function isEmptyString(value: string){
-  if(value === undefined) return true;
-  if(value === null) return true;
-  if(value === '') return true;
-  return false
-}
 
 function safeParseJsonConfig(json: string) : ISwapAppService[] | undefined {
   if(!isEmptyString(json))
@@ -22,7 +16,6 @@ function safeParseJsonConfig(json: string) : ISwapAppService[] | undefined {
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
-  
 }
 
 async function main() {

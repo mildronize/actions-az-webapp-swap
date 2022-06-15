@@ -4,7 +4,7 @@ import { ISwapAppService, IAppSetting } from '../interfaces/ISwapAppService';
 import InputValidation from '../validation/InputValidation';
 import AppSettingsMasking from '../core/AppSettingsMasking';
 import SwapAppSettingsValidation from '../validation/SwapAppSettings';
-import { webAppListAppSettings } from '../utils/azureCLI';
+import { webAppListAppSettings } from '../utils/azureUtility';
 import SwapAppSettings from '../core/SwapAppSettings';
 
 export class GetDeploySlots {
