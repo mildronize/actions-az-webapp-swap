@@ -9,7 +9,7 @@ import { isEmptyString } from './utils/commonUtility';
 export type Mode = 'get-deploy-slots' | 'set-deploy-slots' | 'swap-slots';
 
 function safeParseJsonConfig(json: string): ISwapAppService[] | undefined {
-  if (!isEmptyString(json)) return undefined;
+  if (isEmptyString(json)) return undefined;
   try {
     return JSON.parse(json) as ISwapAppService[];
   } catch (error) {

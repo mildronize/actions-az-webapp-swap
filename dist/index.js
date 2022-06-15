@@ -44,7 +44,7 @@ const fs_1 = __importDefault(__nccwpck_require__(5747));
 const InputValidation_1 = __importDefault(__nccwpck_require__(3781));
 const AppSettingsMasking_1 = __importDefault(__nccwpck_require__(7451));
 const SwapAppSettings_1 = __importDefault(__nccwpck_require__(915));
-const azureCLI_1 = __nccwpck_require__(2439);
+const azureUtility_1 = __nccwpck_require__(3573);
 const SwapAppSettings_2 = __importDefault(__nccwpck_require__(878));
 class GetDeploySlots {
     constructor() { }
@@ -57,8 +57,8 @@ class GetDeploySlots {
             const appSettingTargetSlotWorkers = [];
             for (const config of swapAppServiceList) {
                 console.log(config.name);
-                appSettingSourceSlotWorkers.push((0, azureCLI_1.webAppListAppSettings)(config.name, config.resourceGroup, config.slot));
-                appSettingTargetSlotWorkers.push((0, azureCLI_1.webAppListAppSettings)(config.name, config.resourceGroup, config.targetSlot));
+                appSettingSourceSlotWorkers.push((0, azureUtility_1.webAppListAppSettings)(config.name, config.resourceGroup, config.slot));
+                appSettingTargetSlotWorkers.push((0, azureUtility_1.webAppListAppSettings)(config.name, config.resourceGroup, config.targetSlot));
             }
             const appSettingsSourceSlotList = yield Promise.all(appSettingSourceSlotWorkers);
             const appSettingsTargetSlotList = yield Promise.all(appSettingTargetSlotWorkers);
@@ -423,14 +423,29 @@ const core = __importStar(__nccwpck_require__(2186));
 const GetDeploySlots_1 = __nccwpck_require__(5059);
 const SetDeploySlots_1 = __nccwpck_require__(5950);
 const SwapSlots_1 = __nccwpck_require__(635);
+const commonUtility_1 = __nccwpck_require__(9602);
+function safeParseJsonConfig(json) {
+    if ((0, commonUtility_1.isEmptyString)(json))
+        return undefined;
+    try {
+        return JSON.parse(json);
+    }
+    catch (error) {
+        if (error instanceof Error)
+            core.setFailed(error.message);
+    }
+}
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const input = {
-            mode: core.getInput('mode'),
-            swapAppServiceConfig: JSON.parse(core.getInput('config')),
+            mode: core.getInput('mode', { required: true }),
+            swapAppServiceConfig: safeParseJsonConfig(core.getInput('config')),
         };
-        if (input.mode === 'get-deploy-slots')
+        if (input.mode === 'get-deploy-slots') {
+            if (!input.swapAppServiceConfig)
+                throw new Error(`Invalid JSON setting on get-deploy-slots mode`);
             return yield new GetDeploySlots_1.GetDeploySlots().execute(input.swapAppServiceConfig);
+        }
         if (input.mode === 'set-deploy-slots')
             return yield new SetDeploySlots_1.SetDeploySlots().execute();
         if (input.mode === 'swap-slots')
@@ -443,7 +458,7 @@ main();
 
 /***/ }),
 
-/***/ 2439:
+/***/ 3573:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -475,13 +490,31 @@ const azureCommands = {
 function webAppListAppSettings(name, resourceGroup, slot) {
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield (0, executeProcess_1.executeProcess)(azureCommands.webAppListAppSettings(name, resourceGroup, slot));
-        if (result.stdout instanceof Buffer) {
-            return JSON.parse(result.stdout.toString());
-        }
-        return JSON.parse(result.stdout || '');
+        return (0, executeProcess_1.parseJSON)(result);
     });
 }
 exports.webAppListAppSettings = webAppListAppSettings;
+
+
+/***/ }),
+
+/***/ 9602:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isEmptyString = void 0;
+function isEmptyString(value) {
+    if (value === undefined)
+        return true;
+    if (value === null)
+        return true;
+    if (value === '')
+        return true;
+    return false;
+}
+exports.isEmptyString = isEmptyString;
 
 
 /***/ }),
@@ -501,8 +534,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.executeProcess = exports.executeBatchProcess = void 0;
+exports.executeProcess = exports.executeBatchProcess = exports.parseJSON = void 0;
 const promisify_child_process_1 = __nccwpck_require__(2809);
+function parseJSON(output) {
+    if ((output === null || output === void 0 ? void 0 : output.stdout) instanceof Buffer) {
+        return JSON.parse(output === null || output === void 0 ? void 0 : output.stdout.toString());
+    }
+    return JSON.parse((output === null || output === void 0 ? void 0 : output.stdout) || '');
+}
+exports.parseJSON = parseJSON;
 function executeBatchProcess(commands, option) {
     return __awaiter(this, void 0, void 0, function* () {
         const mergedCommand = commands.join(' && ');
