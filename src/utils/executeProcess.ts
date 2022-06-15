@@ -26,7 +26,7 @@ export async function executeProcess(command: string, option?: IOption) {
   });
 
   childProcess.stderr?.on('data', function (data: any) {
-    if (!slient) console.debug('stderr: ' + data.toString());
+    console.error(data.toString());
   });
 
   childProcess.on('exit', function (code: any) {

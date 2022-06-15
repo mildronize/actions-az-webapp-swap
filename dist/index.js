@@ -562,8 +562,7 @@ function executeProcess(command, option) {
                 console.debug(data.toString());
         });
         (_b = childProcess.stderr) === null || _b === void 0 ? void 0 : _b.on('data', function (data) {
-            if (!slient)
-                console.debug('stderr: ' + data.toString());
+            console.error(data.toString());
         });
         childProcess.on('exit', function (code) {
             if (!slient)
