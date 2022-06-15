@@ -7,12 +7,34 @@ import { SwapSlots } from './commands/SwapSlots';
 
 export type Mode = 'get-deploy-slots' | 'set-deploy-slots' | 'swap-slots';
 
+function isEmptyString(value: string){
+  if(value === undefined) return true;
+  if(value === null) return true;
+  if(value === '') return true;
+  return false
+}
+
+function safeParseJsonConfig(json: string) : ISwapAppService[] | undefined {
+  if(!isEmptyString(json))
+    return undefined;
+  try {
+    return JSON.parse(json) as ISwapAppService[];
+  } catch (error) {
+    if (error instanceof Error) core.setFailed(error.message)
+  }
+  
+}
+
 async function main() {
   const input = {
     mode: core.getInput('mode') as Mode,
-    swapAppServiceConfig: JSON.parse(core.getInput('config')) as ISwapAppService[],
+    swapAppServiceConfig: safeParseJsonConfig(core.getInput('config')),
   };
-  if (input.mode === 'get-deploy-slots') return await new GetDeploySlots().execute(input.swapAppServiceConfig);
+  if (input.mode === 'get-deploy-slots'){ 
+    if(!input.swapAppServiceConfig)
+      throw new Error(`Invalid JSON setting on get-deploy-slots mode`);
+    return await new GetDeploySlots().execute(input.swapAppServiceConfig); 
+  }
   if (input.mode === 'set-deploy-slots') return await new SetDeploySlots().execute();
   if (input.mode === 'swap-slots') return await new SwapSlots().execute();
   throw new Error(`"${input.mode} is not available"`);
