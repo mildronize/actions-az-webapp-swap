@@ -1,4 +1,5 @@
 import { executeBatchProcess, executeProcess, parseBufferToString } from './executeProcess';
+import { format } from 'date-fns';
 import * as core from '@actions/core';
 import { stripIndent } from 'common-tags';
 import path from 'path';
@@ -72,14 +73,15 @@ export async function gitCommitNewBranch({
   message,
 }: IGitCommit): Promise<void> {
   const tmpDir = `tmp-${new Date().getTime()}`;
-  const newBranch = `appsettings/swap-${new Date().getTime()}`;
+  const newBranch = `appsettings-swap-${format(new Date(), 'yyyyMMdd')}T${format(new Date(), 'kkmmssX')}Z`;
   await executeBatchProcess([
     git.clone(repo, personalAccessToken, tmpDir),
     `cd ${tmpDir}`,
     git.checkoutRef(ref),
-    `sleep 1`,
     git.checkoutNewBranch(newBranch),
-    `cp -r ${path.resolve('..', rootPath)} ${path.join(tmpDir, targetPath)}`,
+    `cd ..`,
+    `cp -r ${path.resolve(rootPath)} ${path.join(tmpDir, targetPath)}`,
+    `cd ${tmpDir}`,
     git.configUser(email, name),
     git.addAll(),
     git.commit(message),
