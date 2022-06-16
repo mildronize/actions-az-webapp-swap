@@ -1,6 +1,6 @@
 {
   "name": "typescript-action",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "private": true,
   "description": "TypeScript template action",
   "main": "lib/main.js",
@@ -30,6 +30,7 @@
     "@actions/core": "^1.6.0",
     "@azure/arm-appservice": "^12.0.0",
     "@azure/identity": "^2.0.4",
+    "chalk": "^4.1.2",
     "common-tags": "^1.8.2",
     "promisify-child-process": "^4.1.1",
     "ts-node": "^10.8.1",

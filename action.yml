@@ -10,6 +10,20 @@ inputs:
     required: false
     description: 'input description here'
     default: 'default value if applicable'
+  token:
+    required: false
+    description: 'personal access token'
+  repo: 
+    required: false
+    description: 'repo'
+  ref: 
+    required: false
+    description: 'ref'
+    default: 'appsettings'
+  path:
+    required: false
+    description: 'path to place app setting'
+    default: '.'
 
 runs:
   using: 'node16'

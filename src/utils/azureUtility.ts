@@ -1,4 +1,4 @@
-import { executeProcess, parseJSON } from './executeProcess';
+import { executeProcess, parseBufferToString } from './executeProcess';
 import { IAppSetting } from '../interfaces/ISwapAppService';
 import { stripIndent } from 'common-tags';
 
@@ -20,5 +20,5 @@ export async function webAppListAppSettings(
   slot?: string
 ): Promise<IAppSetting[]> {
   const result = await executeProcess(azureCommands.webAppListAppSettings(name, resourceGroup, slot));
-  return parseJSON(result);
+  return JSON.parse(parseBufferToString(result.stdout));
 }

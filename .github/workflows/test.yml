@@ -43,3 +43,6 @@ jobs:
         with:
           mode: get-deploy-slots
           config: ${{ needs.get-matrix.outputs.result }}
+          token: ${{ secrets.PAT }}
+          repo: mildronize/actions-az-webapp-swap
+          

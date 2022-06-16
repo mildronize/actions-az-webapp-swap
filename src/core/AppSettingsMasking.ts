@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import { ISwapAppService, IAppSetting } from '../interfaces/ISwapAppService';
 import crypto from 'crypto';
-import { isSwapAppSettingExisting } from '../utils/swapAppSettingsUtility';
+import { findAppSettingName } from '../utils/swapAppSettingsUtility';
 
 export function hashValue(value: string) {
   const sha256Hasher = crypto.createHmac('sha3-512', process.env.HASH_SECRET || '');
@@ -16,7 +16,7 @@ export default class AppSettingsMasking {
 
     for (const swapAppSetting of swapAppSettings) {
       if (swapAppSetting.sensitive === true) {
-        const found = isSwapAppSettingExisting(swapAppSetting.name, appSettings);
+        const found = findAppSettingName(swapAppSetting.name, appSettings);
         if (found >= 0) {
           const foundAppSetting = appSettings[found];
           foundAppSetting.value = hashValue(foundAppSetting.value);

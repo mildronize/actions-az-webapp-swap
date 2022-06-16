@@ -488,3 +488,343 @@ test('test SwapAppSettings which fullfill can be merged', () => {
     ],
   });
 });
+
+/**
+ *  simulateSwappedAppSettings
+ */
+
+test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=True , source equals target', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  const swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: true,
+      },
+    ],
+  };
+  const appSettingsSourceSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 source',
+      slotSetting: true,
+    },
+  ];
+  const appSettingsTargetSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 target',
+      slotSetting: true,
+    },
+  ];
+  expect(
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+  ).toStrictEqual([
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 source',
+      slotSetting: true,
+    },
+  ]);
+});
+
+test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source equals target', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  const swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: false,
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: false,
+      },
+    ],
+  };
+  const appSettingsSourceSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 source',
+      slotSetting: true,
+    },
+  ];
+  const appSettingsTargetSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 target',
+      slotSetting: true,
+    },
+  ];
+  expect(
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+  ).toStrictEqual([
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      slotSetting: false,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 target',
+      slotSetting: false,
+    },
+  ]);
+});
+
+test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=True , source less than target', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  const swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: true,
+      },
+    ],
+  };
+  const appSettingsSourceSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+  ];
+  const appSettingsTargetSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 target',
+      slotSetting: true,
+    },
+  ];
+  expect(
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+  ).toStrictEqual([
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+  ]);
+});
+
+test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source less than target', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  const swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: false,
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: false,
+      },
+    ],
+  };
+  const appSettingsSourceSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+  ];
+  const appSettingsTargetSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 target',
+      slotSetting: true,
+    },
+  ];
+  expect(
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+  ).toStrictEqual([
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      slotSetting: false,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 target',
+      slotSetting: false,
+    },
+  ]);
+});
+
+test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=True , source more than target', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  const swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: true,
+      },
+    ],
+  };
+  const appSettingsSourceSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 source',
+      slotSetting: true,
+    },
+  ];
+  const appSettingsTargetSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      slotSetting: true,
+    },
+  ];
+  expect(
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+  ).toStrictEqual([
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 source',
+      slotSetting: true,
+    },
+  ]);
+});
+
+test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source more than target', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  const swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: false,
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: false,
+      },
+    ],
+  };
+  const appSettingsSourceSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 source',
+      slotSetting: true,
+    },
+  ];
+  const appSettingsTargetSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      slotSetting: true,
+    },
+  ];
+  expect(
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+  ).toStrictEqual([
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      slotSetting: false,
+    },
+  ]);
+});

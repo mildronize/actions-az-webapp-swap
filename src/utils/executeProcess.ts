@@ -1,14 +1,13 @@
 import { spawn, Output } from 'promisify-child-process';
+import chalk from 'chalk';
 
 interface IOption {
   slient?: boolean;
 }
 
-export function parseJSON(output?: Output) {
-  if (output?.stdout instanceof Buffer) {
-    return JSON.parse(output?.stdout.toString());
-  }
-  return JSON.parse(output?.stdout || '');
+export function parseBufferToString(data: Buffer | string | null | undefined): string {
+  if (data instanceof Buffer) return data.toString();
+  return data || '';
 }
 
 export async function executeBatchProcess(commands: string[], option?: IOption) {
@@ -17,16 +16,16 @@ export async function executeBatchProcess(commands: string[], option?: IOption) 
 }
 
 export async function executeProcess(command: string, option?: IOption) {
-  const slient = option?.slient ? option?.slient : true;
+  const slient = option?.slient ? option?.slient : false;
   if (!slient) console.debug(`Executing... ${command}`);
   const childProcess = spawn(command, { encoding: 'utf8', maxBuffer: 200 * 1024, shell: true });
 
   childProcess.stdout?.on('data', function (data: any) {
-    if (!slient) console.debug(data.toString());
+    if (!slient) console.debug(chalk.blue(data.toString()));
   });
 
   childProcess.stderr?.on('data', function (data: any) {
-    console.error(data.toString());
+    console.error(chalk.red(data.toString()));
   });
 
   childProcess.on('exit', function (code: any) {

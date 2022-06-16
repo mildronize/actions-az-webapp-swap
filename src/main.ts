@@ -21,10 +21,24 @@ async function main() {
   const input = {
     mode: core.getInput('mode', { required: true }) as Mode,
     swapAppServiceConfig: safeParseJsonConfig(core.getInput('config')),
+    repo: core.getInput('repo'),
+    token: core.getInput('token'),
+    ref: core.getInput('ref'),
+    path: core.getInput('path'),
   };
   if (input.mode === 'get-deploy-slots') {
     if (!input.swapAppServiceConfig) throw new Error(`Invalid JSON setting on get-deploy-slots mode`);
-    return await new GetDeploySlots().execute(input.swapAppServiceConfig);
+    if (!input.repo) throw new Error(`repo input is required on get-deploy-slots mode`);
+    if (!input.token) throw new Error(`token input is required on get-deploy-slots mode`);
+    if (!input.ref) throw new Error(`ref input is required on get-deploy-slots mode`);
+    if (!input.path) throw new Error(`path input is required on get-deploy-slots mode`);
+    const { repo, token, ref, path } = input;
+    return await new GetDeploySlots().execute(input.swapAppServiceConfig, {
+      repo,
+      token,
+      ref,
+      path,
+    });
   }
   if (input.mode === 'set-deploy-slots') return await new SetDeploySlots().execute();
   if (input.mode === 'swap-slots') return await new SwapSlots().execute();
