@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import * as core from '@actions/core';
 import { stripIndent } from 'common-tags';
 import path from 'path';
+import { title } from 'process';
 
 export const git = {
   add: (path: string) => `git add ${path}`,
@@ -27,12 +28,21 @@ export const git = {
   removeRemoteBranch: (ref: string) => `git push origin --delete ${ref}`,
 };
 
-interface IGitOptions {
+export const github = {
+  login: (tokenPath: string) => `gh auth login --with-token < ${tokenPath}`,
+  createPullRequest: (repo: string, base: string, head: string, title: string, body: string) =>
+    `gh pr create --base ${base} --head ${head} --repo ${repo} --title "${title}" --body "${body}"`,
+};
+
+interface IGitBase {
   repo: string;
   personalAccessToken: string;
   ref: string;
   email: string;
   name: string;
+}
+
+interface IGit extends IGitBase {
   message: string;
   rootPath: string;
   targetPath: string;
@@ -47,7 +57,7 @@ export async function gitCommit({
   name,
   email,
   message,
-}: IGitOptions): Promise<void> {
+}: IGit): Promise<void> {
   const tmpDir = `tmp-${new Date().getTime()}`;
   await executeBatchProcess([
     git.clone(repo, personalAccessToken, tmpDir),
@@ -73,7 +83,7 @@ export async function gitCommitNewBranch({
   name,
   email,
   message,
-}: IGitOptions): Promise<void> {
+}: IGit): Promise<string> {
   const tmpDir = `tmp-${new Date().getTime()}`;
   // const newBranch = `${ref}-swap-${format(new Date(), 'yyyyMMdd')}T${format(new Date(), 'kkmmssX')}Z`;
   const newBranch = `${ref}-swap-${new Date().getTime()}`;
@@ -91,15 +101,10 @@ export async function gitCommitNewBranch({
     git.pushUpstream(newBranch),
     `rm -rf ${tmpDir}`,
   ]);
+  return newBranch;
 }
 
-export async function createBranchWhenNotExist({
-  repo,
-  personalAccessToken,
-  ref,
-  name,
-  email,
-}: Omit<IGitOptions, 'targetPath' | 'rootPath' | 'message'>) {
+export async function createBranchWhenNotExist({ repo, personalAccessToken, ref, name, email }: IGitBase) {
   const tmpDir = `tmp-${new Date().getTime()}`;
   await executeProcess(git.clone(repo, personalAccessToken, tmpDir));
   if ((await isBranchExist(ref, tmpDir)) === false) {
@@ -120,11 +125,27 @@ async function isBranchExist(branch: string, repoPath: string): Promise<boolean>
   return true;
 }
 
-async function createPullRequest(base: string, head: string) {
-  const name = `Preview App Setting After Swap ${format(new Date(), 'yyyy MM, dd - kk:mm:ss OOOO')}`;
+interface IGitHubPullRequest extends IGitBase {
+  sourceBranch: string;
+}
 
-  // TODO: Close PR with Tags
+export async function createPullRequest({ repo, personalAccessToken, ref, sourceBranch }: IGitHubPullRequest) {
+  const name = `Preview App Setting After Swap ${format(new Date(), 'yyyy MM, dd - kk:mm:ss OOOO')}`;
+  const tokenFile = `token-${new Date().getTime()}.txt`;
   // 1. Create PR
+  await executeBatchProcess([
+    `echo "${personalAccessToken}" > ${tokenFile}`,
+    github.login(tokenFile),
+    github.createPullRequest(
+      repo,
+      ref,
+      sourceBranch,
+      name,
+      'Please consider file change in order to see what happen after swap app service slot'
+    ),
+    `rm -rf ${tokenFile}`,
+  ]);
+  // TODO: Close PR with Tags
   // 2. Create tags
 }
 
@@ -134,7 +155,7 @@ export async function renameRemoteBranch({
   ref,
   name,
   email,
-}: Omit<IGitOptions, 'targetPath' | 'rootPath' | 'message'>) {
+}: Omit<IGit, 'targetPath' | 'rootPath' | 'message'>) {
   const tmpDir = `tmp-${new Date().getTime()}`;
   const newBranch = `${ref}-done-${new Date().getTime()}`;
   await executeProcess(git.clone(repo, personalAccessToken, tmpDir));

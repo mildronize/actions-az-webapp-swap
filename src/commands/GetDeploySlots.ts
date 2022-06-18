@@ -7,7 +7,7 @@ import AppSettingsMasking from '../core/AppSettingsMasking';
 import SwapAppSettingsValidation from '../validation/SwapAppSettings';
 import { webAppListAppSettings } from '../utils/azureUtility';
 import SwapAppSettings from '../core/SwapAppSettings';
-import { createBranchWhenNotExist, gitCommit, gitCommitNewBranch } from '../utils/githubUtiltiy';
+import { createBranchWhenNotExist, createPullRequest, gitCommit, gitCommitNewBranch } from '../utils/githubUtiltiy';
 import { PathUtility } from '../utils/PathUtility';
 import { constants } from '../constants';
 
@@ -18,7 +18,7 @@ interface IGetDeploySlotsOption {
   path: string;
 }
 
-const { WorkingDirectory, DefaultEncoding } = constants;
+const { WorkingDirectory, DefaultEncoding, gitConfig } = constants;
 
 export class GetDeploySlots {
   constructor() {}
@@ -74,8 +74,8 @@ export class GetDeploySlots {
       repo,
       ref,
       personalAccessToken,
-      name: 'GitHub Action Swap Bot',
-      email: 'github-swap-bot@github.com',
+      name: gitConfig.name,
+      email: gitConfig.email,
     });
 
     /**
@@ -108,8 +108,8 @@ export class GetDeploySlots {
       repo,
       ref,
       personalAccessToken,
-      name: 'GitHub Action Swap Bot',
-      email: 'github-swap-bot@github.com',
+      name: gitConfig.name,
+      email: gitConfig.email,
       message: 'Get App Setting',
     });
     pathUtility.clean();
@@ -135,15 +135,24 @@ export class GetDeploySlots {
       );
     }
 
-    await gitCommitNewBranch({
+    const newBranch = await gitCommitNewBranch({
       targetPath,
       rootPath: WorkingDirectory,
       repo,
       ref,
       personalAccessToken,
-      name: 'GitHub Action Swap Bot',
-      email: 'github-swap-bot@github.com',
+      name: gitConfig.name,
+      email: gitConfig.email,
       message: 'Get App Setting if app service is swapped',
+    });
+
+    await createPullRequest({
+      name: gitConfig.name,
+      email: gitConfig.email,
+      personalAccessToken,
+      ref,
+      repo,
+      sourceBranch: newBranch,
     });
   }
 }

@@ -110,7 +110,7 @@ const SwapAppSettings_2 = __importDefault(__nccwpck_require__(878));
 const githubUtiltiy_1 = __nccwpck_require__(3582);
 const PathUtility_1 = __nccwpck_require__(5911);
 const constants_1 = __nccwpck_require__(5105);
-const { WorkingDirectory, DefaultEncoding } = constants_1.constants;
+const { WorkingDirectory, DefaultEncoding, gitConfig } = constants_1.constants;
 class GetDeploySlots {
     constructor() { }
     execute(swapAppServiceList, options) {
@@ -152,8 +152,8 @@ class GetDeploySlots {
                 repo,
                 ref,
                 personalAccessToken,
-                name: 'GitHub Action Swap Bot',
-                email: 'github-swap-bot@github.com',
+                name: gitConfig.name,
+                email: gitConfig.email,
             });
             /**
              * Step 2: Commit Marked App Setting (Source Slot)
@@ -175,8 +175,8 @@ class GetDeploySlots {
                 repo,
                 ref,
                 personalAccessToken,
-                name: 'GitHub Action Swap Bot',
-                email: 'github-swap-bot@github.com',
+                name: gitConfig.name,
+                email: gitConfig.email,
                 message: 'Get App Setting',
             });
             pathUtility.clean();
@@ -191,15 +191,23 @@ class GetDeploySlots {
                 fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, slot), JSON.stringify(simulatedSwappedAppSettingsSourceSlot, null, 2), DefaultEncoding);
                 fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(simulatedSwappedAppSettingsTargetSlot, null, 2), DefaultEncoding);
             }
-            yield (0, githubUtiltiy_1.gitCommitNewBranch)({
+            const newBranch = yield (0, githubUtiltiy_1.gitCommitNewBranch)({
                 targetPath,
                 rootPath: WorkingDirectory,
                 repo,
                 ref,
                 personalAccessToken,
-                name: 'GitHub Action Swap Bot',
-                email: 'github-swap-bot@github.com',
+                name: gitConfig.name,
+                email: gitConfig.email,
                 message: 'Get App Setting if app service is swapped',
+            });
+            yield (0, githubUtiltiy_1.createPullRequest)({
+                name: gitConfig.name,
+                email: gitConfig.email,
+                personalAccessToken,
+                ref,
+                repo,
+                sourceBranch: newBranch,
             });
         });
     }
@@ -391,6 +399,10 @@ exports.constants = {
     },
     DefaultEncoding: 'utf8',
     WorkingDirectory: 'swap-tmp-path',
+    gitConfig: {
+        name: 'GitHub Action Swap Bot',
+        email: 'github-swap-bot@github.com',
+    },
 };
 
 
@@ -938,7 +950,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.renameRemoteBranch = exports.createBranchWhenNotExist = exports.gitCommitNewBranch = exports.gitCommit = exports.git = void 0;
+exports.renameRemoteBranch = exports.createPullRequest = exports.createBranchWhenNotExist = exports.gitCommitNewBranch = exports.gitCommit = exports.github = exports.git = void 0;
 const executeProcess_1 = __nccwpck_require__(4550);
 const date_fns_1 = __nccwpck_require__(3314);
 const common_tags_1 = __nccwpck_require__(3509);
@@ -962,6 +974,10 @@ exports.git = {
     lsRemote: (ref) => `git ls-remote --heads origin ${ref}`,
     renameBranch: (oldRef, newRef) => `git branch -m ${oldRef} ${newRef}`,
     removeRemoteBranch: (ref) => `git push origin --delete ${ref}`,
+};
+exports.github = {
+    login: (tokenPath) => `gh auth login --with-token < ${tokenPath}`,
+    createPullRequest: (repo, base, head, title, body) => `gh pr create --base ${base} --head ${head} --repo ${repo} --title "${title}" --body "${body}"`,
 };
 function gitCommit({ targetPath, rootPath, repo, personalAccessToken, ref, name, email, message, }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1001,10 +1017,11 @@ function gitCommitNewBranch({ targetPath, rootPath, repo, personalAccessToken, r
             exports.git.pushUpstream(newBranch),
             `rm -rf ${tmpDir}`,
         ]);
+        return newBranch;
     });
 }
 exports.gitCommitNewBranch = gitCommitNewBranch;
-function createBranchWhenNotExist({ repo, personalAccessToken, ref, name, email, }) {
+function createBranchWhenNotExist({ repo, personalAccessToken, ref, name, email }) {
     return __awaiter(this, void 0, void 0, function* () {
         const tmpDir = `tmp-${new Date().getTime()}`;
         yield (0, executeProcess_1.executeProcess)(exports.git.clone(repo, personalAccessToken, tmpDir));
@@ -1031,14 +1048,22 @@ function isBranchExist(branch, repoPath) {
         return true;
     });
 }
-function createPullRequest(base, head) {
+function createPullRequest({ repo, personalAccessToken, ref, sourceBranch }) {
     return __awaiter(this, void 0, void 0, function* () {
         const name = `Preview App Setting After Swap ${(0, date_fns_1.format)(new Date(), 'yyyy MM, dd - kk:mm:ss OOOO')}`;
-        // TODO: Close PR with Tags
+        const tokenFile = `token-${new Date().getTime()}.txt`;
         // 1. Create PR
+        yield (0, executeProcess_1.executeBatchProcess)([
+            `echo "${personalAccessToken}" > ${tokenFile}`,
+            exports.github.login(tokenFile),
+            exports.github.createPullRequest(repo, ref, sourceBranch, name, 'Please consider file change in order to see what happen after swap app service slot'),
+            `rm -rf ${tokenFile}`,
+        ]);
+        // TODO: Close PR with Tags
         // 2. Create tags
     });
 }
+exports.createPullRequest = createPullRequest;
 function renameRemoteBranch({ repo, personalAccessToken, ref, name, email, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const tmpDir = `tmp-${new Date().getTime()}`;
