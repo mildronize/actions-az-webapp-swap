@@ -24,6 +24,27 @@ inputs:
     required: false
     description: 'path to place app setting'
     default: '.'
+  name:
+    required: false
+    description: 'App Service Name'
+  resource-group:
+    required: false
+    description: 'resourceGroup'
+  slot:
+    required: false
+    description: 'Source Slot of App Service'
+  target-slot:
+    required: false
+    description: 'Target Slot of App Service'
+  default-slot-setting:
+    required: false
+    description: 'defaultSlotSetting'
+  default-sensitive:
+    required: false
+    description: 'defaultSensitive'
+  app-settings-config:
+    required: false
+    description: 'AppSettings Configs'
 
 runs:
   using: 'node16'

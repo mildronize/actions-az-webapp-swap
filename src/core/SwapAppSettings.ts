@@ -72,23 +72,6 @@ export default class SwapAppSettings {
      * If SlotSetting = Flase, Get value from target Slot.
      */
     const result: IAppSetting[] = [];
-    // for (const sourceAppSetting of sourceSlotAppSettings) {
-    //   const foundSwapAppSettingIndex = findAppSettingName(sourceAppSetting.name, this.swapAppService.appSettings);
-    //   if (foundSwapAppSettingIndex < 0)
-    //     throw new Error(`App Setting Name of Source Slot (${sourceAppSetting.name}) is not found in SwapAppSetting`);
-    //   const swapAppSettings = this.swapAppService.appSettings[foundSwapAppSettingIndex];
-    //   let appSetting: Record<string, any> = { name: sourceAppSetting.name, slotSetting: swapAppSettings.slotSetting };
-    //   if (swapAppSettings.slotSetting === true) {
-    //     appSetting.value = sourceAppSetting.value;
-    //     result.push(appSetting as IAppSetting);
-    //   } else {
-    //     const foundTargetIndex = findAppSettingName(sourceAppSetting.name, targetSlotAppSettings);
-    //     if (foundTargetIndex >= 0) {
-    //       appSetting.value = targetSlotAppSettings[foundTargetIndex].value;
-    //       result.push(appSetting as IAppSetting);
-    //     }
-    //   }
-    // }
     for (const swapAppSettings of this.swapAppService.appSettings) {
       let appSetting: Record<string, any> = { name: swapAppSettings.name, slotSetting: swapAppSettings.slotSetting };
       const foundSourceIndex = findAppSettingName(swapAppSettings.name, sourceSlotAppSettings);
@@ -103,6 +86,22 @@ export default class SwapAppSettings {
           appSetting.value = targetSlotAppSettings[foundTargetIndex].value;
           result.push(appSetting as IAppSetting);
         }
+      }
+    }
+    return result;
+  }
+
+  public applyAppSetting(appSettings: IAppSetting[]): IAppSetting[] {
+    const result: IAppSetting[] = [];
+    for (const appSetting of appSettings) {
+      const foundIndex = findAppSettingName(appSetting.name, this.swapAppService.appSettings);
+      if (foundIndex >= 0) {
+        result.push({
+          ...appSetting,
+          slotSetting: this.swapAppService.appSettings[foundIndex].slotSetting,
+        });
+      } else {
+        core.warning(`Cannot apply setting name "${appSetting.name}" in ${this.swapAppService.name}`);
       }
     }
     return result;

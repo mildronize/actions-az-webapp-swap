@@ -828,3 +828,50 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source
     },
   ]);
 });
+
+test('test SwapAppSettings.applyAppSetting', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  const swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: true,
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: true,
+      },
+    ],
+  };
+  const appSettings: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 val',
+      slotSetting: false,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 val',
+      slotSetting: true,
+    },
+  ];
+  expect(new SwapAppSettings(swapAppService).applyAppSetting(appSettings)).toStrictEqual([
+    {
+      name: 'config_1',
+      value: 'config_1 val',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 val',
+      slotSetting: true,
+    },
+  ]);
+});

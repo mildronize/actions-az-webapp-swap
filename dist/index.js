@@ -57,7 +57,7 @@ class GetDeploySlots {
             const { repo, path: targetPath, ref, token: personalAccessToken } = options;
             core.debug(`Using get-deploy-slots mode`);
             // const swapAppServiceList: ISwapAppService[] = JSON.parse(fs.readFileSync('./input.json', DefaultEncoding));
-            new InputValidation_1.default(swapAppServiceList).validate();
+            InputValidation_1.default.validateArray(swapAppServiceList);
             const appSettingSourceSlotWorkers = [];
             const appSettingTargetSlotWorkers = [];
             for (const config of swapAppServiceList) {
@@ -73,9 +73,9 @@ class GetDeploySlots {
                 let appSettingsSourceSlot = appSettingsSourceSlotList[i];
                 let appSettingsTargetSlot = appSettingsTargetSlotList[i];
                 // Validate appSettings for Source Slot
-                this.validateSwapAppServiceSlot(swapAppService, appSettingsSourceSlot, swapAppService.slot);
+                new SwapAppSettings_1.default(swapAppService, appSettingsSourceSlot).validate(swapAppService.slot);
                 // Validate appSettings for Target Slot
-                this.validateSwapAppServiceSlot(swapAppService, appSettingsTargetSlot, swapAppService.targetSlot);
+                new SwapAppSettings_1.default(swapAppService, appSettingsTargetSlot).validate(swapAppService.targetSlot);
                 const swapAppSettings = new SwapAppSettings_2.default(swapAppService);
                 swapAppService = swapAppSettings.fullfill(appSettingsSourceSlot, swapAppService.slot);
                 swapAppService = swapAppSettings.fullfill(appSettingsTargetSlot, swapAppService.targetSlot);
@@ -135,12 +135,6 @@ class GetDeploySlots {
             });
         });
     }
-    validateSwapAppServiceSlot(swapAppService, appSettings, slot) {
-        core.debug(`Validating SwapAppService config with slot: ${slot}`);
-        const result = new SwapAppSettings_1.default(swapAppService, appSettings).run();
-        if (!result.success)
-            throw new Error(`Invalid SwapAppService config with slot (${slot}): ${result.error}`);
-    }
 }
 exports.GetDeploySlots = GetDeploySlots;
 
@@ -180,14 +174,63 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SetDeploySlots = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const fs_1 = __importDefault(__nccwpck_require__(5747));
+const SwapAppSettings_1 = __importDefault(__nccwpck_require__(878));
+const azureUtility_1 = __nccwpck_require__(3573);
+const InputValidation_1 = __importDefault(__nccwpck_require__(3781));
+const constants_1 = __nccwpck_require__(5105);
+const path_1 = __importDefault(__nccwpck_require__(5622));
+const { DefaultEncoding, WorkingDirectory } = constants_1.constants;
+function getAppSettings(swapAppService, postAction) {
+    return __awaiter(this, void 0, void 0, function* () {
+        InputValidation_1.default.validate(swapAppService);
+        let [appSettingsSourceSlot, appSettingsTargetSlot] = yield Promise.all([
+            (0, azureUtility_1.webAppListAppSettings)(swapAppService.name, swapAppService.resourceGroup, swapAppService.slot),
+            (0, azureUtility_1.webAppListAppSettings)(swapAppService.name, swapAppService.resourceGroup, swapAppService.targetSlot),
+        ]);
+        const swapAppSettings = new SwapAppSettings_1.default(swapAppService);
+        swapAppService = swapAppSettings.fullfill(appSettingsSourceSlot, swapAppService.slot);
+        swapAppService = swapAppSettings.fullfill(appSettingsTargetSlot, swapAppService.targetSlot);
+        if ((postAction === null || postAction === void 0 ? void 0 : postAction.applyAppSetting) === true) {
+            // Apply new value slot settings
+            appSettingsSourceSlot = swapAppSettings.applyAppSetting(appSettingsSourceSlot);
+            appSettingsTargetSlot = swapAppSettings.applyAppSetting(appSettingsTargetSlot);
+        }
+        return {
+            source: appSettingsSourceSlot,
+            target: appSettingsTargetSlot,
+        };
+    });
+}
 class SetDeploySlots {
-    constructor() { }
+    constructor(swapAppService) {
+        this.swapAppService = swapAppService;
+    }
     execute() {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug(`Using set-deploy-slots mode`);
+            const appSetting = yield getAppSettings(this.swapAppService, { applyAppSetting: true });
+            yield Promise.all([
+                this.setAppSettings(appSetting.source, this.swapAppService.slot),
+                this.setAppSettings(appSetting.source, this.swapAppService.targetSlot),
+            ]);
+        });
+    }
+    setAppSettings(appSettings, slot) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { name, resourceGroup } = this.swapAppService;
+            const appSettingPath = path_1.default.resolve(WorkingDirectory, `${name}-${slot}`);
+            fs_1.default.writeFileSync(appSettingPath, JSON.stringify(appSettings), DefaultEncoding);
+            yield (0, azureUtility_1.webAppSetAppSettings)(name, resourceGroup, slot, appSettingPath);
+            fs_1.default.rmSync(appSettingPath, {
+                force: true,
+            });
         });
     }
 }
@@ -419,23 +462,6 @@ class SwapAppSettings {
          * If SlotSetting = Flase, Get value from target Slot.
          */
         const result = [];
-        // for (const sourceAppSetting of sourceSlotAppSettings) {
-        //   const foundSwapAppSettingIndex = findAppSettingName(sourceAppSetting.name, this.swapAppService.appSettings);
-        //   if (foundSwapAppSettingIndex < 0)
-        //     throw new Error(`App Setting Name of Source Slot (${sourceAppSetting.name}) is not found in SwapAppSetting`);
-        //   const swapAppSettings = this.swapAppService.appSettings[foundSwapAppSettingIndex];
-        //   let appSetting: Record<string, any> = { name: sourceAppSetting.name, slotSetting: swapAppSettings.slotSetting };
-        //   if (swapAppSettings.slotSetting === true) {
-        //     appSetting.value = sourceAppSetting.value;
-        //     result.push(appSetting as IAppSetting);
-        //   } else {
-        //     const foundTargetIndex = findAppSettingName(sourceAppSetting.name, targetSlotAppSettings);
-        //     if (foundTargetIndex >= 0) {
-        //       appSetting.value = targetSlotAppSettings[foundTargetIndex].value;
-        //       result.push(appSetting as IAppSetting);
-        //     }
-        //   }
-        // }
         for (const swapAppSettings of this.swapAppService.appSettings) {
             let appSetting = { name: swapAppSettings.name, slotSetting: swapAppSettings.slotSetting };
             const foundSourceIndex = (0, swapAppSettingsUtility_1.findAppSettingName)(swapAppSettings.name, sourceSlotAppSettings);
@@ -451,6 +477,19 @@ class SwapAppSettings {
                     appSetting.value = targetSlotAppSettings[foundTargetIndex].value;
                     result.push(appSetting);
                 }
+            }
+        }
+        return result;
+    }
+    applyAppSetting(appSettings) {
+        const result = [];
+        for (const appSetting of appSettings) {
+            const foundIndex = (0, swapAppSettingsUtility_1.findAppSettingName)(appSetting.name, this.swapAppService.appSettings);
+            if (foundIndex >= 0) {
+                result.push(Object.assign(Object.assign({}, appSetting), { slotSetting: this.swapAppService.appSettings[foundIndex].slotSetting }));
+            }
+            else {
+                core.warning(`Cannot apply setting name "${appSetting.name}" in ${this.swapAppService.name}`);
             }
         }
         return result;
@@ -524,6 +563,17 @@ const GetDeploySlots_1 = __nccwpck_require__(5059);
 const SetDeploySlots_1 = __nccwpck_require__(5950);
 const SwapSlots_1 = __nccwpck_require__(635);
 const commonUtility_1 = __nccwpck_require__(9602);
+function safeParseJsonSwapAppSetting(json) {
+    if ((0, commonUtility_1.isEmptyString)(json))
+        return undefined;
+    try {
+        return JSON.parse(json);
+    }
+    catch (error) {
+        if (error instanceof Error)
+            core.setFailed(error.message);
+    }
+}
 function safeParseJsonConfig(json) {
     if ((0, commonUtility_1.isEmptyString)(json))
         return undefined;
@@ -539,14 +589,24 @@ function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const input = {
             mode: core.getInput('mode', { required: true }),
-            swapAppServiceConfig: safeParseJsonConfig(core.getInput('config')),
+            // get-deploy-slots
+            swapAppServiceConfig: core.getMultilineInput('config').join(''),
             repo: core.getInput('repo'),
             token: core.getInput('token'),
             ref: core.getInput('ref'),
             path: core.getInput('path'),
+            // set-deploy-slots
+            name: core.getInput('name'),
+            resourceGroup: core.getInput('resource-group'),
+            slot: core.getInput('slot'),
+            targetSlot: core.getInput('target-slot'),
+            defaultSlotSetting: core.getInput('default-slot-setting'),
+            defaultSensitive: core.getInput('default-sensitive'),
+            appSettings: core.getMultilineInput('app-settings-config').join(''),
         };
         if (input.mode === 'get-deploy-slots') {
-            if (!input.swapAppServiceConfig)
+            const swapAppService = safeParseJsonConfig(input.swapAppServiceConfig);
+            if (!swapAppService)
                 throw new Error(`Invalid JSON setting on get-deploy-slots mode`);
             if (!input.repo)
                 throw new Error(`repo input is required on get-deploy-slots mode`);
@@ -557,15 +617,40 @@ function main() {
             if (!input.path)
                 throw new Error(`path input is required on get-deploy-slots mode`);
             const { repo, token, ref, path } = input;
-            return yield new GetDeploySlots_1.GetDeploySlots().execute(input.swapAppServiceConfig, {
+            return yield new GetDeploySlots_1.GetDeploySlots().execute(swapAppService, {
                 repo,
                 token,
                 ref,
                 path,
             });
         }
-        if (input.mode === 'set-deploy-slots')
-            return yield new SetDeploySlots_1.SetDeploySlots().execute();
+        if (input.mode === 'set-deploy-slots') {
+            const appSettings = safeParseJsonSwapAppSetting(input.appSettings);
+            if (!appSettings)
+                throw new Error(`Invalid Swap App setting on set-deploy-slots mode`);
+            if (!input.name)
+                throw new Error(`name input is required on set-deploy-slots mode`);
+            if (!input.resourceGroup)
+                throw new Error(`resourceGroup input is required on set-deploy-slots mode`);
+            if (!input.slot)
+                throw new Error(`slot input is required on set-deploy-slots mode`);
+            if (!input.targetSlot)
+                throw new Error(`targetSlot input is required on set-deploy-slots mode`);
+            if (!input.defaultSlotSetting)
+                throw new Error(`defaultSlotSetting input is required on set-deploy-slots mode`);
+            if (!input.defaultSensitive)
+                throw new Error(`defaultSensitive input is required on set-deploy-slots mode`);
+            const { name, resourceGroup, slot, targetSlot, defaultSlotSetting, defaultSensitive } = input;
+            return yield new SetDeploySlots_1.SetDeploySlots({
+                name,
+                resourceGroup,
+                slot,
+                targetSlot,
+                defaultSlotSetting: defaultSlotSetting,
+                defaultSensitive: defaultSensitive,
+                appSettings,
+            }).execute();
+        }
         if (input.mode === 'swap-slots')
             return yield new SwapSlots_1.SwapSlots().execute();
         throw new Error(`"${input.mode} is not available"`);
@@ -632,7 +717,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.webAppListAppSettings = void 0;
+exports.webAppSetAppSettings = exports.webAppListAppSettings = void 0;
 const executeProcess_1 = __nccwpck_require__(4550);
 const common_tags_1 = __nccwpck_require__(3509);
 const azureCommands = {
@@ -645,6 +730,16 @@ const azureCommands = {
           --resource-group ${resourceGroup}
   `;
     },
+    webAppSetAppSettings: (name, resourceGroup, slot, appSettingPath) => {
+        const azSlotCommand = slot !== 'production' && slot !== undefined ? `--slot ${slot}` : '';
+        return (0, common_tags_1.stripIndent) `
+      az webapp config appsettings set \\
+        --name ${name} \\
+        --resource-group ${resourceGroup} \\
+        ${azSlotCommand} \\
+        --settings @${appSettingPath}}
+    `;
+    },
 };
 function webAppListAppSettings(name, resourceGroup, slot) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -653,6 +748,12 @@ function webAppListAppSettings(name, resourceGroup, slot) {
     });
 }
 exports.webAppListAppSettings = webAppListAppSettings;
+function webAppSetAppSettings(name, resourceGroup, slot, appSettingPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield (0, executeProcess_1.executeProcess)(azureCommands.webAppSetAppSettings(name, resourceGroup, slot, appSettingPath));
+    });
+}
+exports.webAppSetAppSettings = webAppSetAppSettings;
 
 
 /***/ }),
@@ -846,6 +947,14 @@ function isBranchExist(branch, repoPath) {
         return true;
     });
 }
+function createPullRequest(base, head) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const name = `Preview App Setting After Swap ${(0, date_fns_1.format)(new Date(), 'yyyy MM, dd - kk:mm:ss OOOO')}`;
+        // TODO: Close PR with Tags
+        // 1. Create PR
+        // 2. Create tags
+    });
+}
 
 
 /***/ }),
@@ -886,8 +995,7 @@ const AppSettingSchema = zod_1.z.object({
     // TODO: Make it optional later
     slotSetting: zod_1.z.boolean(),
 });
-// creating a schema for strings
-const SwapAppServiceSchema = zod_1.z.array(zod_1.z.object({
+const SwapAppServiceSchema = zod_1.z.object({
     name: zod_1.z.string(),
     resourceGroup: zod_1.z.string(),
     slot: zod_1.z.string(),
@@ -895,13 +1003,21 @@ const SwapAppServiceSchema = zod_1.z.array(zod_1.z.object({
     defaultSlotSetting: zod_1.z.nativeEnum(ISwapAppService_1.DefaultSlotSettingEnum),
     defaultSensitive: zod_1.z.nativeEnum(ISwapAppService_1.DefaultSensitiveEnum),
     appSettings: zod_1.z.array(AppSettingSchema),
-}));
+});
+// creating a schema for strings
+const SwapAppServiceArraySchema = zod_1.z.array(SwapAppServiceSchema);
 class InputValidation {
-    constructor(input) {
-        this.input = input;
+    static validateArray(input) {
+        const result = SwapAppServiceArraySchema.safeParse(input);
+        if (!result.success) {
+            const formatted = result.error.format();
+            // TODO: Make Human readable error message
+            console.error(JSON.stringify(formatted, null, 2));
+            throw new Error('Input Validation Error');
+        }
     }
-    validate() {
-        const result = SwapAppServiceSchema.safeParse(this.input);
+    static validate(input) {
+        const result = SwapAppServiceSchema.safeParse(input);
         if (!result.success) {
             const formatted = result.error.format();
             // TODO: Make Human readable error message
@@ -916,13 +1032,33 @@ exports.default = InputValidation;
 /***/ }),
 
 /***/ 915:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.validateUniqueAppSettingsName = void 0;
 const ISwapAppService_1 = __nccwpck_require__(3172);
+const core = __importStar(__nccwpck_require__(2186));
 function validateUniqueAppSettingsName(appSettings) {
     const uniqueName = new Set();
     for (const appSetting of appSettings) {
@@ -939,7 +1075,13 @@ class SwapAppSettingsValidation {
         this.appSettings = appSettings;
         this.appSettingKeys = [];
     }
-    run() {
+    validate(slot) {
+        core.debug(`Validating SwapAppService config with slot: ${slot}`);
+        const result = this.safeValidate();
+        if (!result.success)
+            throw new Error(`Invalid SwapAppService config with slot (${slot}): ${result.error}`);
+    }
+    safeValidate() {
         validateUniqueAppSettingsName(this.appSettings);
         validateUniqueAppSettingsName(this.swapAppService.appSettings);
         for (const appSetting of this.appSettings) {
