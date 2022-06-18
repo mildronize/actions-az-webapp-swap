@@ -928,7 +928,8 @@ function createBranchWhenNotExist({ repo, personalAccessToken, ref, name, email,
             yield (0, executeProcess_1.executeBatchProcess)([
                 `cd ${tmpDir}`,
                 exports.git.configUser(email, name),
-                exports.git.createEmptyBranch(ref, message),
+                // git.createEmptyBranch(ref, message),
+                exports.git.checkoutNewBranch(ref),
                 exports.git.pushUpstream(ref),
                 `rm -rf ${tmpDir}`,
             ]);

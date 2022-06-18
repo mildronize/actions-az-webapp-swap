@@ -50,7 +50,7 @@ jobs:
           
   set-slot-settings:
     if: github.event_name == 'pull_request' && github.event.action != 'closed'
-    name: Set Slot ${{ matrix.name }} - ${{ matrix.slot }}
+    name: ${{ format('⚙️ Set Slot | {0} - {1}', matrix.name, matrix.slot) }}
     needs: [ get-matrix ]
     runs-on: ubuntu-latest
     strategy:
