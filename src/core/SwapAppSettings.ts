@@ -19,9 +19,9 @@ export default class SwapAppSettings {
    */
   public fullfill(appSettings: IAppSetting[], slot: string) {
     if (this.swapAppService.defaultSlotSetting === DefaultSlotSettingEnum.required)
-      core.warning(`Cannot fulfill swap app service from giving app setting because all slotSettings is required`);
+      core.info(`Cannot fulfill swap app service from giving app setting because all slotSettings is required`);
     if (this.swapAppService.defaultSensitive === DefaultSensitiveEnum.required)
-      core.warning(`Cannot fulfill swap app service from giving app setting because all sensitive is required`);
+      core.info(`Cannot fulfill swap app service from giving app setting because all sensitive is required`);
 
     for (const appSetting of appSettings) {
       const found = findAppSettingName(appSetting.name, this.swapAppService.appSettings);

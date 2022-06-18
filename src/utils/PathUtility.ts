@@ -10,9 +10,9 @@ export class PathUtility {
     return path.join(this.rootPath, resourceGroup);
   }
 
-  public getAppSettingsPath(resourceGroup: string, appName: string) {
+  public getAppSettingsPath(resourceGroup: string, appName: string, slot: string) {
     this.rootDir = this.getRootDir(resourceGroup);
-    return path.join(this.rootDir, `${appName}.appsettings.json`);
+    return path.join(this.rootDir, `${appName}-${slot}.appsettings.json`);
   }
 
   public createDir(resourceGroup: string) {

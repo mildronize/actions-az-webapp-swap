@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import fs from 'fs';
+import path from 'path';
 import { ISwapAppService, IAppSetting } from '../interfaces/ISwapAppService';
 import InputValidation from '../validation/InputValidation';
 import AppSettingsMasking from '../core/AppSettingsMasking';
@@ -40,7 +41,8 @@ export class GetDeploySlots {
     }
     const appSettingsSourceSlotList = await Promise.all(appSettingSourceSlotWorkers);
     const appSettingsTargetSlotList = await Promise.all(appSettingTargetSlotWorkers);
-    const simulatedSwappedAppSettingsList: IAppSetting[][] = [];
+    const simulatedSwappedAppSettingsSourceSlotList: IAppSetting[][] = [];
+    const simulatedSwappedAppSettingsTargetSlotList: IAppSetting[][] = [];
 
     for (let i = 0; i < swapAppServiceList.length; i++) {
       let swapAppService = swapAppServiceList[i];
@@ -60,8 +62,11 @@ export class GetDeploySlots {
       appSettingsSourceSlot = appSettingMasking.mask(appSettingsSourceSlot, swapAppService.slot);
       appSettingsTargetSlot = appSettingMasking.mask(appSettingsTargetSlot, swapAppService.targetSlot);
 
-      simulatedSwappedAppSettingsList.push(
+      simulatedSwappedAppSettingsSourceSlotList.push(
         swapAppSettings.simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+      );
+      simulatedSwappedAppSettingsTargetSlotList.push(
+        swapAppSettings.simulateSwappedAppSettings(appSettingsTargetSlot, appSettingsSourceSlot)
       );
     }
 
@@ -79,15 +84,24 @@ export class GetDeploySlots {
      */
     const pathUtility = new PathUtility(WorkingDirectory);
     for (let i = 0; i < swapAppServiceList.length; i++) {
-      const swapAppService = swapAppServiceList[i];
+      const { resourceGroup, name, slot, targetSlot } = swapAppServiceList[i];
       const appSettingsSourceSlot = appSettingsSourceSlotList[i];
-      pathUtility.createDir(swapAppService.resourceGroup);
+      const appSettingsTargetSlot = appSettingsTargetSlotList[i];
+      pathUtility.createDir(resourceGroup);
       fs.writeFileSync(
-        pathUtility.getAppSettingsPath(swapAppService.resourceGroup, swapAppService.name),
+        pathUtility.getAppSettingsPath(resourceGroup, name, slot),
         JSON.stringify(appSettingsSourceSlot, null, 2),
         DefaultEncoding
       );
+      fs.writeFileSync(
+        pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot),
+        JSON.stringify(appSettingsTargetSlot, null, 2),
+        DefaultEncoding
+      );
     }
+
+    // Create tmp file if no change it will be merge
+    fs.writeFileSync(path.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), '', DefaultEncoding);
 
     await gitCommit({
       targetPath,
@@ -106,12 +120,18 @@ export class GetDeploySlots {
      */
 
     for (let i = 0; i < swapAppServiceList.length; i++) {
-      const swapAppService = swapAppServiceList[i];
-      const simulatedSwappedAppSettings = simulatedSwappedAppSettingsList[i];
-      pathUtility.createDir(swapAppService.resourceGroup);
+      const { resourceGroup, name, slot, targetSlot } = swapAppServiceList[i];
+      const simulatedSwappedAppSettingsSourceSlot = simulatedSwappedAppSettingsSourceSlotList[i];
+      const simulatedSwappedAppSettingsTargetSlot = simulatedSwappedAppSettingsTargetSlotList[i];
+      pathUtility.createDir(resourceGroup);
       fs.writeFileSync(
-        pathUtility.getAppSettingsPath(swapAppService.resourceGroup, swapAppService.name),
-        JSON.stringify(simulatedSwappedAppSettings, null, 2),
+        pathUtility.getAppSettingsPath(resourceGroup, name, slot),
+        JSON.stringify(simulatedSwappedAppSettingsSourceSlot, null, 2),
+        DefaultEncoding
+      );
+      fs.writeFileSync(
+        pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot),
+        JSON.stringify(simulatedSwappedAppSettingsTargetSlot, null, 2),
         DefaultEncoding
       );
     }

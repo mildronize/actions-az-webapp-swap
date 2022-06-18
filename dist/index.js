@@ -41,6 +41,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetDeploySlots = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
+const path_1 = __importDefault(__nccwpck_require__(5622));
 const InputValidation_1 = __importDefault(__nccwpck_require__(3781));
 const AppSettingsMasking_1 = __importDefault(__nccwpck_require__(7451));
 const SwapAppSettings_1 = __importDefault(__nccwpck_require__(915));
@@ -67,7 +68,8 @@ class GetDeploySlots {
             }
             const appSettingsSourceSlotList = yield Promise.all(appSettingSourceSlotWorkers);
             const appSettingsTargetSlotList = yield Promise.all(appSettingTargetSlotWorkers);
-            const simulatedSwappedAppSettingsList = [];
+            const simulatedSwappedAppSettingsSourceSlotList = [];
+            const simulatedSwappedAppSettingsTargetSlotList = [];
             for (let i = 0; i < swapAppServiceList.length; i++) {
                 let swapAppService = swapAppServiceList[i];
                 let appSettingsSourceSlot = appSettingsSourceSlotList[i];
@@ -83,7 +85,8 @@ class GetDeploySlots {
                 const appSettingMasking = new AppSettingsMasking_1.default(swapAppService);
                 appSettingsSourceSlot = appSettingMasking.mask(appSettingsSourceSlot, swapAppService.slot);
                 appSettingsTargetSlot = appSettingMasking.mask(appSettingsTargetSlot, swapAppService.targetSlot);
-                simulatedSwappedAppSettingsList.push(swapAppSettings.simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot));
+                simulatedSwappedAppSettingsSourceSlotList.push(swapAppSettings.simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot));
+                simulatedSwappedAppSettingsTargetSlotList.push(swapAppSettings.simulateSwappedAppSettings(appSettingsTargetSlot, appSettingsSourceSlot));
             }
             yield (0, githubUtiltiy_1.createBranchWhenNotExist)({
                 repo,
@@ -98,11 +101,15 @@ class GetDeploySlots {
              */
             const pathUtility = new PathUtility_1.PathUtility(WorkingDirectory);
             for (let i = 0; i < swapAppServiceList.length; i++) {
-                const swapAppService = swapAppServiceList[i];
+                const { resourceGroup, name, slot, targetSlot } = swapAppServiceList[i];
                 const appSettingsSourceSlot = appSettingsSourceSlotList[i];
-                pathUtility.createDir(swapAppService.resourceGroup);
-                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(swapAppService.resourceGroup, swapAppService.name), JSON.stringify(appSettingsSourceSlot, null, 2), DefaultEncoding);
+                const appSettingsTargetSlot = appSettingsTargetSlotList[i];
+                pathUtility.createDir(resourceGroup);
+                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, slot), JSON.stringify(appSettingsSourceSlot, null, 2), DefaultEncoding);
+                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(appSettingsTargetSlot, null, 2), DefaultEncoding);
             }
+            // Create tmp file if no change it will be merge
+            fs_1.default.writeFileSync(path_1.default.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), '', DefaultEncoding);
             yield (0, githubUtiltiy_1.gitCommit)({
                 targetPath,
                 rootPath: WorkingDirectory,
@@ -118,10 +125,12 @@ class GetDeploySlots {
              * Step 3: Simulate if values are swapped (Target Slot)
              */
             for (let i = 0; i < swapAppServiceList.length; i++) {
-                const swapAppService = swapAppServiceList[i];
-                const simulatedSwappedAppSettings = simulatedSwappedAppSettingsList[i];
-                pathUtility.createDir(swapAppService.resourceGroup);
-                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(swapAppService.resourceGroup, swapAppService.name), JSON.stringify(simulatedSwappedAppSettings, null, 2), DefaultEncoding);
+                const { resourceGroup, name, slot, targetSlot } = swapAppServiceList[i];
+                const simulatedSwappedAppSettingsSourceSlot = simulatedSwappedAppSettingsSourceSlotList[i];
+                const simulatedSwappedAppSettingsTargetSlot = simulatedSwappedAppSettingsTargetSlotList[i];
+                pathUtility.createDir(resourceGroup);
+                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, slot), JSON.stringify(simulatedSwappedAppSettingsSourceSlot, null, 2), DefaultEncoding);
+                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(simulatedSwappedAppSettingsTargetSlot, null, 2), DefaultEncoding);
             }
             yield (0, githubUtiltiy_1.gitCommitNewBranch)({
                 targetPath,
@@ -431,9 +440,9 @@ class SwapAppSettings {
      */
     fullfill(appSettings, slot) {
         if (this.swapAppService.defaultSlotSetting === ISwapAppService_1.DefaultSlotSettingEnum.required)
-            core.warning(`Cannot fulfill swap app service from giving app setting because all slotSettings is required`);
+            core.info(`Cannot fulfill swap app service from giving app setting because all slotSettings is required`);
         if (this.swapAppService.defaultSensitive === ISwapAppService_1.DefaultSensitiveEnum.required)
-            core.warning(`Cannot fulfill swap app service from giving app setting because all sensitive is required`);
+            core.info(`Cannot fulfill swap app service from giving app setting because all sensitive is required`);
         for (const appSetting of appSettings) {
             const found = (0, swapAppSettingsUtility_1.findAppSettingName)(appSetting.name, this.swapAppService.appSettings);
             if (found < 0) {
@@ -665,9 +674,9 @@ class PathUtility {
     getRootDir(resourceGroup) {
         return path_1.default.join(this.rootPath, resourceGroup);
     }
-    getAppSettingsPath(resourceGroup, appName) {
+    getAppSettingsPath(resourceGroup, appName, slot) {
         this.rootDir = this.getRootDir(resourceGroup);
-        return path_1.default.join(this.rootDir, `${appName}.appsettings.json`);
+        return path_1.default.join(this.rootDir, `${appName}-${slot}.appsettings.json`);
     }
     createDir(resourceGroup) {
         this.rootDir = this.getRootDir(resourceGroup);
