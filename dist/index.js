@@ -262,7 +262,6 @@ const azureUtility_1 = __nccwpck_require__(3573);
 const InputValidation_1 = __importDefault(__nccwpck_require__(3781));
 const constants_1 = __nccwpck_require__(5105);
 const path_1 = __importDefault(__nccwpck_require__(5622));
-const executeProcess_1 = __nccwpck_require__(4550);
 const { DefaultEncoding, WorkingDirectory } = constants_1.constants;
 function getAppSettings(swapAppService, postAction) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -319,7 +318,6 @@ class SetDeploySlots {
             fs_1.default.rmSync(appSettingPath, {
                 force: true,
             });
-            yield (0, executeProcess_1.executeBatchProcess)(['ls -la', 'pwd']);
         });
     }
 }
@@ -838,7 +836,9 @@ function webAppListAppSettings(name, resourceGroup, slot) {
 exports.webAppListAppSettings = webAppListAppSettings;
 function webAppSetAppSettings(name, resourceGroup, slot, appSettingPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield (0, executeProcess_1.executeProcess)(azureCommands.webAppSetAppSettingsByFile(name, resourceGroup, slot, appSettingPath));
+        return yield (0, executeProcess_1.executeProcess)(azureCommands.webAppSetAppSettingsByFile(name, resourceGroup, slot, appSettingPath), {
+            slient: false
+        });
     });
 }
 exports.webAppSetAppSettings = webAppSetAppSettings;

@@ -50,7 +50,9 @@ export async function webAppSetAppSettings(
   slot: string,
   appSettingPath: string
 ): Promise<Output> {
-  return await executeProcess(azureCommands.webAppSetAppSettingsByFile(name, resourceGroup, slot, appSettingPath));
+  return await executeProcess(azureCommands.webAppSetAppSettingsByFile(name, resourceGroup, slot, appSettingPath), {
+    slient: false,
+  });
 }
 
 export async function webAppSwap(

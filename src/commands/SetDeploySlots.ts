@@ -71,6 +71,5 @@ export class SetDeploySlots {
     fs.rmSync(appSettingPath, {
       force: true,
     });
-    await executeBatchProcess(['ls -la', 'pwd']);
   }
 }
