@@ -288,11 +288,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SwapSlots = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const azureUtility_1 = __nccwpck_require__(3573);
 class SwapSlots {
-    constructor() { }
+    constructor(swapAppService) {
+        this.swapAppService = swapAppService;
+    }
     execute() {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug(`Using swap-slots mode`);
+            const { name, resourceGroup, slot, targetSlot } = this.swapAppService;
+            yield (0, azureUtility_1.webAppSwap)(name, resourceGroup, slot, targetSlot);
         });
     }
 }
@@ -576,14 +581,6 @@ const GetDeploySlots_1 = __nccwpck_require__(5059);
 const SetDeploySlots_1 = __nccwpck_require__(5950);
 const SwapSlots_1 = __nccwpck_require__(635);
 const commonUtility_1 = __nccwpck_require__(9602);
-// function safeParseJsonSwapAppSetting(json: string): ISwapAppSetting[] | undefined {
-//   if (isEmptyString(json)) return undefined;
-//   try {
-//     return JSON.parse(json) as ISwapAppSetting[];
-//   } catch (error) {
-//     if (error instanceof Error) core.setFailed(error.message);
-//   }
-// }
 function safeParseJson(json) {
     if ((0, commonUtility_1.isEmptyString)(json))
         return undefined;
@@ -634,8 +631,12 @@ function main() {
                 throw new Error(`Invalid Swap App setting on set-deploy-slots mode`);
             return yield new SetDeploySlots_1.SetDeploySlots(swapAppService).execute();
         }
-        if (input.mode === 'swap-slots')
-            return yield new SwapSlots_1.SwapSlots().execute();
+        if (input.mode === 'swap-slots') {
+            const swapAppService = safeParseJson(input.swapAppService);
+            if (!swapAppService)
+                throw new Error(`Invalid Swap App setting on swap-slots mode`);
+            return yield new SwapSlots_1.SwapSlots(swapAppService).execute();
+        }
         throw new Error(`"${input.mode} is not available"`);
     });
 }
@@ -700,7 +701,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.webAppSetAppSettings = exports.webAppListAppSettings = void 0;
+exports.webAppSwap = exports.webAppSetAppSettings = exports.webAppListAppSettings = void 0;
 const executeProcess_1 = __nccwpck_require__(4550);
 const common_tags_1 = __nccwpck_require__(3509);
 const azureCommands = {
@@ -723,6 +724,15 @@ const azureCommands = {
         --settings @${appSettingPath}
     `;
     },
+    webAppDeploySlotSwap: (name, resourceGroup, slot, targetSlot) => {
+        return (0, common_tags_1.stripIndent) `
+      az webapp deployment slot swap \\
+        --name ${name} \\
+        --resource-group ${resourceGroup} \\
+        --slot ${slot} \\
+        --target-slot ${targetSlot}
+    `;
+    },
 };
 function webAppListAppSettings(name, resourceGroup, slot) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -737,6 +747,12 @@ function webAppSetAppSettings(name, resourceGroup, slot, appSettingPath) {
     });
 }
 exports.webAppSetAppSettings = webAppSetAppSettings;
+function webAppSwap(name, resourceGroup, slot, targetSlot) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield (0, executeProcess_1.executeProcess)(azureCommands.webAppDeploySlotSwap(name, resourceGroup, slot, targetSlot));
+    });
+}
+exports.webAppSwap = webAppSwap;
 
 
 /***/ }),

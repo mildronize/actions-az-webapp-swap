@@ -1,10 +1,5 @@
 import * as core from '@actions/core';
-import {
-  DefaultSensitiveEnum,
-  DefaultSlotSettingEnum,
-  ISwapAppService,
-  ISwapAppSetting,
-} from './interfaces/ISwapAppService';
+import { ISwapAppService } from './interfaces/ISwapAppService';
 
 import { GetDeploySlots } from './commands/GetDeploySlots';
 import { SetDeploySlots } from './commands/SetDeploySlots';
@@ -12,15 +7,6 @@ import { SwapSlots } from './commands/SwapSlots';
 import { isEmptyString } from './utils/commonUtility';
 
 export type Mode = 'get-deploy-slots' | 'set-deploy-slots' | 'swap-slots';
-
-// function safeParseJsonSwapAppSetting(json: string): ISwapAppSetting[] | undefined {
-//   if (isEmptyString(json)) return undefined;
-//   try {
-//     return JSON.parse(json) as ISwapAppSetting[];
-//   } catch (error) {
-//     if (error instanceof Error) core.setFailed(error.message);
-//   }
-// }
 
 function safeParseJson(json: string) {
   if (isEmptyString(json)) return undefined;
@@ -63,7 +49,11 @@ async function main() {
     if (!swapAppService) throw new Error(`Invalid Swap App setting on set-deploy-slots mode`);
     return await new SetDeploySlots(swapAppService).execute();
   }
-  if (input.mode === 'swap-slots') return await new SwapSlots().execute();
+  if (input.mode === 'swap-slots') {
+    const swapAppService = safeParseJson(input.swapAppService) as ISwapAppService;
+    if (!swapAppService) throw new Error(`Invalid Swap App setting on swap-slots mode`);
+    return await new SwapSlots(swapAppService).execute();
+  }
   throw new Error(`"${input.mode} is not available"`);
 }
 

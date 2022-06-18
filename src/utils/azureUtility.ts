@@ -23,6 +23,16 @@ const azureCommands = {
         --settings @${appSettingPath}
     `;
   },
+
+  webAppDeploySlotSwap: (name: string, resourceGroup: string, slot: string, targetSlot: string) => {
+    return stripIndent`
+      az webapp deployment slot swap \\
+        --name ${name} \\
+        --resource-group ${resourceGroup} \\
+        --slot ${slot} \\
+        --target-slot ${targetSlot}
+    `;
+  },
 };
 
 export async function webAppListAppSettings(
@@ -41,4 +51,13 @@ export async function webAppSetAppSettings(
   appSettingPath: string
 ): Promise<Output> {
   return await executeProcess(azureCommands.webAppSetAppSettingsByFile(name, resourceGroup, slot, appSettingPath));
+}
+
+export async function webAppSwap(
+  name: string,
+  resourceGroup: string,
+  slot: string,
+  targetSlot: string
+): Promise<Output> {
+  return await executeProcess(azureCommands.webAppDeploySlotSwap(name, resourceGroup, slot, targetSlot));
 }

@@ -70,3 +70,24 @@ jobs:
           mode: set-deploy-slots
           swap-config: ${{ toJson(matrix) }}
 
+  swap-slot:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    name: ${{ format('🚀 Swap Slot | {0} - {1}', matrix.name, matrix.slot) }}
+    needs: [ get-matrix ]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.get-matrix.outputs.result) }}
+    steps:
+      - uses: actions/checkout@v2
+      # SP: github action az webapp swap
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure_credentials }}
+      
+      - name: set-slot-settings
+        uses:  ./
+        with: 
+          mode: swap-slots
+          swap-config: ${{ toJson(matrix) }}
