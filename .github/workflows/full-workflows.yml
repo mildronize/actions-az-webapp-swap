@@ -91,3 +91,16 @@ jobs:
         with: 
           mode: swap-slots
           swap-config: ${{ toJson(matrix) }}
+
+  clean:
+    name: Clean
+    needs: [ swap-slot ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: clean
+        uses:  ./
+        with: 
+          mode: clean
+          token: ${{ secrets.PAT }}
+          repo: mildronize/actions-az-webapp-swap

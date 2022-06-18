@@ -76,7 +76,6 @@ export class GetDeploySlots {
       personalAccessToken,
       name: 'GitHub Action Swap Bot',
       email: 'github-swap-bot@github.com',
-      message: 'Init new branch for App Setting',
     });
 
     /**

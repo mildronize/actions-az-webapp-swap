@@ -5,8 +5,9 @@ import { GetDeploySlots } from './commands/GetDeploySlots';
 import { SetDeploySlots } from './commands/SetDeploySlots';
 import { SwapSlots } from './commands/SwapSlots';
 import { isEmptyString } from './utils/commonUtility';
+import { Clean } from './commands/Clean';
 
-export type Mode = 'get-deploy-slots' | 'set-deploy-slots' | 'swap-slots';
+export type Mode = 'get-deploy-slots' | 'set-deploy-slots' | 'swap-slots' | 'clean';
 
 function safeParseJson(json: string) {
   if (isEmptyString(json)) return undefined;
@@ -53,6 +54,17 @@ async function main() {
     const swapAppService = safeParseJson(input.swapAppService) as ISwapAppService;
     if (!swapAppService) throw new Error(`Invalid Swap App setting on swap-slots mode`);
     return await new SwapSlots(swapAppService).execute();
+  }
+  if (input.mode === 'clean') {
+    if (!input.repo) throw new Error(`repo input is required on get-deploy-slots mode`);
+    if (!input.token) throw new Error(`token input is required on get-deploy-slots mode`);
+    if (!input.ref) throw new Error(`ref input is required on get-deploy-slots mode`);
+    const { repo, token, ref } = input;
+    return await new Clean({
+      repo,
+      token,
+      ref,
+    }).execute();
   }
   throw new Error(`"${input.mode} is not available"`);
 }

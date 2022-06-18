@@ -1,6 +1,66 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 9617:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Clean = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const githubUtiltiy_1 = __nccwpck_require__(3582);
+class Clean {
+    constructor(options) {
+        this.options = options;
+    }
+    execute() {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.debug(`Using swap-slots mode`);
+            const { repo, ref, token: personalAccessToken } = this.options;
+            yield (0, githubUtiltiy_1.renameRemoteBranch)({
+                repo,
+                ref,
+                personalAccessToken,
+                name: 'GitHub Action Swap Bot',
+                email: 'github-swap-bot@github.com',
+            });
+        });
+    }
+}
+exports.Clean = Clean;
+
+
+/***/ }),
+
 /***/ 5059:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -93,8 +153,7 @@ class GetDeploySlots {
                 ref,
                 personalAccessToken,
                 name: 'GitHub Action Swap Bot',
-                email: 'github-swap-bot@github.com',
-                message: 'Init new branch for App Setting',
+                email: 'github-swap-bot@github.com'
             });
             /**
              * Step 2: Commit Marked App Setting (Source Slot)
@@ -590,6 +649,7 @@ const GetDeploySlots_1 = __nccwpck_require__(5059);
 const SetDeploySlots_1 = __nccwpck_require__(5950);
 const SwapSlots_1 = __nccwpck_require__(635);
 const commonUtility_1 = __nccwpck_require__(9602);
+const Clean_1 = __nccwpck_require__(9617);
 function safeParseJson(json) {
     if ((0, commonUtility_1.isEmptyString)(json))
         return undefined;
@@ -645,6 +705,18 @@ function main() {
             if (!swapAppService)
                 throw new Error(`Invalid Swap App setting on swap-slots mode`);
             return yield new SwapSlots_1.SwapSlots(swapAppService).execute();
+        }
+        if (input.mode === 'clean') {
+            if (!input.repo)
+                throw new Error(`repo input is required on get-deploy-slots mode`);
+            if (!input.token)
+                throw new Error(`token input is required on get-deploy-slots mode`);
+            if (!input.ref)
+                throw new Error(`ref input is required on get-deploy-slots mode`);
+            const { repo, token, ref } = input;
+            return yield new Clean_1.Clean({
+                repo, token, ref
+            }).execute();
         }
         throw new Error(`"${input.mode} is not available"`);
     });
@@ -864,7 +936,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createBranchWhenNotExist = exports.gitCommitNewBranch = exports.gitCommit = exports.git = void 0;
+exports.renameRemoteBranch = exports.createBranchWhenNotExist = exports.gitCommitNewBranch = exports.gitCommit = exports.git = void 0;
 const executeProcess_1 = __nccwpck_require__(4550);
 const date_fns_1 = __nccwpck_require__(3314);
 const common_tags_1 = __nccwpck_require__(3509);
@@ -886,6 +958,8 @@ exports.git = {
     createEmptyBranch: (ref, message) => `git switch --orphan ${ref} && git commit --allow-empty -m "${message}"`,
     // showRef: (ref: string) => `git show-ref ${ref}`,
     lsRemote: (ref) => `git ls-remote --heads origin ${ref}`,
+    renameBranch: (oldRef, newRef) => `git branch -m ${oldRef} ${newRef}`,
+    removeRemoteBranch: (ref) => `git push origin --delete ref`,
 };
 function gitCommit({ targetPath, rootPath, repo, personalAccessToken, ref, name, email, message, }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -909,7 +983,8 @@ exports.gitCommit = gitCommit;
 function gitCommitNewBranch({ targetPath, rootPath, repo, personalAccessToken, ref, name, email, message, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const tmpDir = `tmp-${new Date().getTime()}`;
-        const newBranch = `appsettings-swap-${(0, date_fns_1.format)(new Date(), 'yyyyMMdd')}T${(0, date_fns_1.format)(new Date(), 'kkmmssX')}Z`;
+        // const newBranch = `${ref}-swap-${format(new Date(), 'yyyyMMdd')}T${format(new Date(), 'kkmmssX')}Z`;
+        const newBranch = `${ref}-swap-${new Date().getTime()}`;
         yield (0, executeProcess_1.executeBatchProcess)([
             exports.git.clone(repo, personalAccessToken, tmpDir),
             `cd ${tmpDir}`,
@@ -927,7 +1002,7 @@ function gitCommitNewBranch({ targetPath, rootPath, repo, personalAccessToken, r
     });
 }
 exports.gitCommitNewBranch = gitCommitNewBranch;
-function createBranchWhenNotExist({ repo, personalAccessToken, ref, name, email, message, }) {
+function createBranchWhenNotExist({ repo, personalAccessToken, ref, name, email, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const tmpDir = `tmp-${new Date().getTime()}`;
         yield (0, executeProcess_1.executeProcess)(exports.git.clone(repo, personalAccessToken, tmpDir));
@@ -935,7 +1010,6 @@ function createBranchWhenNotExist({ repo, personalAccessToken, ref, name, email,
             yield (0, executeProcess_1.executeBatchProcess)([
                 `cd ${tmpDir}`,
                 exports.git.configUser(email, name),
-                // git.createEmptyBranch(ref, message),
                 exports.git.checkoutNewBranch(ref),
                 exports.git.pushUpstream(ref),
                 `rm -rf ${tmpDir}`,
@@ -963,6 +1037,27 @@ function createPullRequest(base, head) {
         // 2. Create tags
     });
 }
+function renameRemoteBranch({ repo, personalAccessToken, ref, name, email, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tmpDir = `tmp-${new Date().getTime()}`;
+        const newBranch = `${ref}-done-${new Date().getTime()}`;
+        yield (0, executeProcess_1.executeProcess)(exports.git.clone(repo, personalAccessToken, tmpDir));
+        if ((yield isBranchExist(ref, tmpDir)) === true) {
+            yield (0, executeProcess_1.executeBatchProcess)([
+                `cd ${tmpDir}`,
+                exports.git.configUser(email, name),
+                exports.git.checkoutRef(ref),
+                exports.git.renameBranch(ref, newBranch),
+                exports.git.pushUpstream(newBranch),
+                exports.git.removeRemoteBranch(ref),
+                `rm -rf ${tmpDir}`,
+            ]);
+        }
+        else
+            console.log(`Remote branch name "${ref} is not exisit."`);
+    });
+}
+exports.renameRemoteBranch = renameRemoteBranch;
 
 
 /***/ }),
