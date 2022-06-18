@@ -16,8 +16,8 @@ export async function executeBatchProcess(commands: string[], option?: IOption) 
 }
 
 export async function executeProcess(command: string, option?: IOption) {
-  const slient = option?.slient ? option?.slient : false;
-  if (!slient) console.debug(`Executing... ${command}`);
+  const slient = option?.slient ? option?.slient : true;
+  console.debug(`Executing... ${command}`);
   const childProcess = spawn(command, { encoding: 'utf8', maxBuffer: 200 * 1024, shell: true });
 
   childProcess.stdout?.on('data', function (data: any) {
