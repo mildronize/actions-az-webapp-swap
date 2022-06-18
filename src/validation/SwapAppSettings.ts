@@ -5,6 +5,7 @@ import {
   ISwapAppSetting,
   IAppSetting,
 } from '../interfaces/ISwapAppService';
+import * as core from '@actions/core';
 
 export interface IValidateAppSettingsReturnType {
   success: boolean;
@@ -28,7 +29,13 @@ export default class SwapAppSettingsValidation {
     private appSettings: IAppSetting[]
   ) {}
 
-  public run() {
+  public validate(slot?: string) {
+    core.debug(`Validating SwapAppService config with slot: ${slot}`);
+    const result = this.safeValidate();
+    if (!result.success) throw new Error(`Invalid SwapAppService config with slot (${slot}): ${result.error}`);
+  }
+
+  public safeValidate() {
     validateUniqueAppSettingsName(this.appSettings);
     validateUniqueAppSettingsName(this.swapAppService.appSettings);
 

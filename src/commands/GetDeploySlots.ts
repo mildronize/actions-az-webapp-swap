@@ -28,7 +28,7 @@ export class GetDeploySlots {
     core.debug(`Using get-deploy-slots mode`);
 
     // const swapAppServiceList: ISwapAppService[] = JSON.parse(fs.readFileSync('./input.json', DefaultEncoding));
-    new InputValidation(swapAppServiceList).validate();
+    InputValidation.validateArray(swapAppServiceList);
 
     const appSettingSourceSlotWorkers: Promise<IAppSetting[]>[] = [];
     const appSettingTargetSlotWorkers: Promise<IAppSetting[]>[] = [];
@@ -47,9 +47,9 @@ export class GetDeploySlots {
       let appSettingsSourceSlot = appSettingsSourceSlotList[i];
       let appSettingsTargetSlot = appSettingsTargetSlotList[i];
       // Validate appSettings for Source Slot
-      this.validateSwapAppServiceSlot(swapAppService, appSettingsSourceSlot, swapAppService.slot);
+      new SwapAppSettingsValidation(swapAppService, appSettingsSourceSlot).validate(swapAppService.slot);
       // Validate appSettings for Target Slot
-      this.validateSwapAppServiceSlot(swapAppService, appSettingsTargetSlot, swapAppService.targetSlot);
+      new SwapAppSettingsValidation(swapAppService, appSettingsTargetSlot).validate(swapAppService.targetSlot);
 
       const swapAppSettings = new SwapAppSettings(swapAppService);
       swapAppService = swapAppSettings.fullfill(appSettingsSourceSlot, swapAppService.slot);
@@ -126,11 +126,5 @@ export class GetDeploySlots {
       email: 'github-swap-bot@github.com',
       message: 'Get App Setting if app service is swapped',
     });
-  }
-
-  private validateSwapAppServiceSlot(swapAppService: ISwapAppService, appSettings: IAppSetting[], slot: string) {
-    core.debug(`Validating SwapAppService config with slot: ${slot}`);
-    const result = new SwapAppSettingsValidation(swapAppService, appSettings).run();
-    if (!result.success) throw new Error(`Invalid SwapAppService config with slot (${slot}): ${result.error}`);
   }
 }
