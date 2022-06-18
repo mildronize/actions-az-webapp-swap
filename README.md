@@ -1,6 +1,10 @@
 
 - set deploy slot in main slot only
 
+## TODO
+
+- [ ] Mask sensitive in log
+
 ## Usage 
 
 ```yaml
