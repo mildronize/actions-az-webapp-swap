@@ -104,7 +104,8 @@ export async function createBranchWhenNotExist({
     await executeBatchProcess([
       `cd ${tmpDir}`,
       git.configUser(email, name),
-      git.createEmptyBranch(ref, message),
+      // git.createEmptyBranch(ref, message),
+      git.checkoutNewBranch(ref),
       git.pushUpstream(ref),
       `rm -rf ${tmpDir}`,
     ]);
@@ -116,4 +117,12 @@ async function isBranchExist(branch: string, repoPath: string): Promise<boolean>
   const stdout = parseBufferToString(result.stdout).trim();
   if (stdout === '') return false;
   return true;
+}
+
+async function createPullRequest(base: string, head: string) {
+  const name = `Preview App Setting After Swap ${format(new Date(), 'yyyy MM, dd - kk:mm:ss OOOO')}`;
+
+  // TODO: Close PR with Tags
+  // 1. Create PR
+  // 2. Create tags
 }
