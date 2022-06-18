@@ -153,7 +153,7 @@ class GetDeploySlots {
                 ref,
                 personalAccessToken,
                 name: 'GitHub Action Swap Bot',
-                email: 'github-swap-bot@github.com'
+                email: 'github-swap-bot@github.com',
             });
             /**
              * Step 2: Commit Marked App Setting (Source Slot)
@@ -715,7 +715,9 @@ function main() {
                 throw new Error(`ref input is required on get-deploy-slots mode`);
             const { repo, token, ref } = input;
             return yield new Clean_1.Clean({
-                repo, token, ref
+                repo,
+                token,
+                ref,
             }).execute();
         }
         throw new Error(`"${input.mode} is not available"`);
@@ -959,7 +961,7 @@ exports.git = {
     // showRef: (ref: string) => `git show-ref ${ref}`,
     lsRemote: (ref) => `git ls-remote --heads origin ${ref}`,
     renameBranch: (oldRef, newRef) => `git branch -m ${oldRef} ${newRef}`,
-    removeRemoteBranch: (ref) => `git push origin --delete ref`,
+    removeRemoteBranch: (ref) => `git push origin --delete ${ref}`,
 };
 function gitCommit({ targetPath, rootPath, repo, personalAccessToken, ref, name, email, message, }) {
     return __awaiter(this, void 0, void 0, function* () {

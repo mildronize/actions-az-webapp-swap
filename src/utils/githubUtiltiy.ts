@@ -23,9 +23,11 @@ export const git = {
     `git switch --orphan ${ref} && git commit --allow-empty -m "${message}"`,
   // showRef: (ref: string) => `git show-ref ${ref}`,
   lsRemote: (ref: string) => `git ls-remote --heads origin ${ref}`,
+  renameBranch: (oldRef: string, newRef: string) => `git branch -m ${oldRef} ${newRef}`,
+  removeRemoteBranch: (ref: string) => `git push origin --delete ${ref}`,
 };
 
-interface IGitCommit {
+interface IGitOptions {
   repo: string;
   personalAccessToken: string;
   ref: string;
@@ -45,7 +47,7 @@ export async function gitCommit({
   name,
   email,
   message,
-}: IGitCommit): Promise<void> {
+}: IGitOptions): Promise<void> {
   const tmpDir = `tmp-${new Date().getTime()}`;
   await executeBatchProcess([
     git.clone(repo, personalAccessToken, tmpDir),
@@ -71,9 +73,10 @@ export async function gitCommitNewBranch({
   name,
   email,
   message,
-}: IGitCommit): Promise<void> {
+}: IGitOptions): Promise<void> {
   const tmpDir = `tmp-${new Date().getTime()}`;
-  const newBranch = `appsettings-swap-${format(new Date(), 'yyyyMMdd')}T${format(new Date(), 'kkmmssX')}Z`;
+  // const newBranch = `${ref}-swap-${format(new Date(), 'yyyyMMdd')}T${format(new Date(), 'kkmmssX')}Z`;
+  const newBranch = `${ref}-swap-${new Date().getTime()}`;
   await executeBatchProcess([
     git.clone(repo, personalAccessToken, tmpDir),
     `cd ${tmpDir}`,
@@ -96,15 +99,13 @@ export async function createBranchWhenNotExist({
   ref,
   name,
   email,
-  message,
-}: Omit<IGitCommit, 'targetPath' | 'rootPath'>) {
+}: Omit<IGitOptions, 'targetPath' | 'rootPath' | 'message'>) {
   const tmpDir = `tmp-${new Date().getTime()}`;
   await executeProcess(git.clone(repo, personalAccessToken, tmpDir));
   if ((await isBranchExist(ref, tmpDir)) === false) {
     await executeBatchProcess([
       `cd ${tmpDir}`,
       git.configUser(email, name),
-      // git.createEmptyBranch(ref, message),
       git.checkoutNewBranch(ref),
       git.pushUpstream(ref),
       `rm -rf ${tmpDir}`,
@@ -125,4 +126,27 @@ async function createPullRequest(base: string, head: string) {
   // TODO: Close PR with Tags
   // 1. Create PR
   // 2. Create tags
+}
+
+export async function renameRemoteBranch({
+  repo,
+  personalAccessToken,
+  ref,
+  name,
+  email,
+}: Omit<IGitOptions, 'targetPath' | 'rootPath' | 'message'>) {
+  const tmpDir = `tmp-${new Date().getTime()}`;
+  const newBranch = `${ref}-done-${new Date().getTime()}`;
+  await executeProcess(git.clone(repo, personalAccessToken, tmpDir));
+  if ((await isBranchExist(ref, tmpDir)) === true) {
+    await executeBatchProcess([
+      `cd ${tmpDir}`,
+      git.configUser(email, name),
+      git.checkoutRef(ref),
+      git.renameBranch(ref, newBranch),
+      git.pushUpstream(newBranch),
+      git.removeRemoteBranch(ref),
+      `rm -rf ${tmpDir}`,
+    ]);
+  } else console.log(`Remote branch name "${ref} is not exisit."`);
 }
