@@ -168,7 +168,7 @@ class GetDeploySlots {
                 fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(appSettingsTargetSlot, null, 2), DefaultEncoding);
             }
             // Create tmp file if no change it will be merge
-            fs_1.default.writeFileSync(path_1.default.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), '', DefaultEncoding);
+            fs_1.default.writeFileSync(path_1.default.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), 'Force Diff for Preview Change', DefaultEncoding);
             yield (0, githubUtiltiy_1.gitCommit)({
                 targetPath,
                 rootPath: WorkingDirectory,
@@ -262,7 +262,6 @@ const azureUtility_1 = __nccwpck_require__(3573);
 const InputValidation_1 = __importDefault(__nccwpck_require__(3781));
 const constants_1 = __nccwpck_require__(5105);
 const path_1 = __importDefault(__nccwpck_require__(5622));
-const executeProcess_1 = __nccwpck_require__(4550);
 const { DefaultEncoding, WorkingDirectory } = constants_1.constants;
 function getAppSettings(swapAppService, postAction) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -319,7 +318,6 @@ class SetDeploySlots {
             fs_1.default.rmSync(appSettingPath, {
                 force: true,
             });
-            yield (0, executeProcess_1.executeBatchProcess)(['ls -la', 'pwd']);
         });
     }
 }

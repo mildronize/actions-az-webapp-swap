@@ -100,7 +100,11 @@ export class GetDeploySlots {
     }
 
     // Create tmp file if no change it will be merge
-    fs.writeFileSync(path.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), '', DefaultEncoding);
+    fs.writeFileSync(
+      path.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`),
+      'Force Diff for Preview Change',
+      DefaultEncoding
+    );
 
     await gitCommit({
       targetPath,

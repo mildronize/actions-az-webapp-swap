@@ -2,8 +2,8 @@
   {
     "name": "thadaw-demo-multi-app-ant",
     "resourceGroup": "rg-thadaw-demo-multi-app",
-    "slot": "production",
-    "targetSlot": "staging",
+    "slot": "staging",
+    "targetSlot": "production", 
     "defaultSlotSetting": "true",
     "defaultSensitive": "required",
     "appSettings": [
