@@ -10,6 +10,10 @@ export const constants: IConstants = {
   },
   DefaultEncoding: 'utf8',
   WorkingDirectory: 'swap-tmp-path',
+  gitConfig: {
+    name: 'GitHub Action Swap Bot',
+    email: 'github-swap-bot@github.com',
+  },
 };
 
 interface IConstants {
@@ -19,4 +23,8 @@ interface IConstants {
   };
   DefaultEncoding: WriteFileOptions;
   WorkingDirectory: string;
+  gitConfig: {
+    name: string;
+    email: string;
+  };
 }
