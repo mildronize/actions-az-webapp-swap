@@ -11,7 +11,7 @@
   },
   {
     "name": "URL",
-    "slotSetting": false,
+    "slotSetting": true,
     "value": "test"
   }
 ]
