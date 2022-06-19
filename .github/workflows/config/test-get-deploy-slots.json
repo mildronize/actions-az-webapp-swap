@@ -1,24 +1,74 @@
 [
   {
-    "name": "thadaw-demo-multi-app-ant",
-    "resourceGroup": "rg-thadaw-demo-multi-app",
-    "slot": "staging",
+    "name": "thcommunity-app-service0",
+    "resourceGroup": "thcommunity-app-rg",
+    "slot": "dev",
     "targetSlot": "production", 
     "defaultSlotSetting": "true",
     "defaultSensitive": "required",
     "appSettings": [
       {
-        "name": "ANOTHER",
+        "name": "data1",
         "sensitive": false,
         "slotSetting": true
       },
       {
-        "name": "Test",
+        "name": "data2",
         "sensitive": true,
         "slotSetting": true
       },
       {
-        "name": "URL",
+        "name": "data4",
+        "sensitive": false,
+        "slotSetting": true
+      }
+    ]
+  },
+  {
+    "name": "thcommunity-app-service1",
+    "resourceGroup": "thcommunity-app-rg",
+    "slot": "dev",
+    "targetSlot": "production", 
+    "defaultSlotSetting": "true",
+    "defaultSensitive": "required",
+    "appSettings": [
+      {
+        "name": "data1",
+        "sensitive": false,
+        "slotSetting": true
+      },
+      {
+        "name": "data2",
+        "sensitive": true,
+        "slotSetting": true
+      },
+      {
+        "name": "data4",
+        "sensitive": false,
+        "slotSetting": true
+      }
+    ]
+  },
+  {
+    "name": "thcommunity-app-service2",
+    "resourceGroup": "thcommunity-app-rg",
+    "slot": "dev",
+    "targetSlot": "production", 
+    "defaultSlotSetting": "true",
+    "defaultSensitive": "required",
+    "appSettings": [
+      {
+        "name": "data1",
+        "sensitive": false,
+        "slotSetting": true
+      },
+      {
+        "name": "data2",
+        "sensitive": true,
+        "slotSetting": true
+      },
+      {
+        "name": "data4",
         "sensitive": false,
         "slotSetting": true
       }
