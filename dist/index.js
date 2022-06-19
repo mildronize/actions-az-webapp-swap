@@ -167,8 +167,6 @@ class GetDeploySlots {
                 fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, slot), JSON.stringify(appSettingsSourceSlot, null, 2), DefaultEncoding);
                 fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(appSettingsTargetSlot, null, 2), DefaultEncoding);
             }
-            // Create tmp file if no change it will be merge
-            fs_1.default.writeFileSync(path_1.default.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), 'Force Diff for Preview Change', DefaultEncoding);
             yield (0, githubUtiltiy_1.gitCommit)({
                 targetPath,
                 rootPath: WorkingDirectory,
@@ -191,6 +189,8 @@ class GetDeploySlots {
                 fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, slot), JSON.stringify(simulatedSwappedAppSettingsSourceSlot, null, 2), DefaultEncoding);
                 fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(simulatedSwappedAppSettingsTargetSlot, null, 2), DefaultEncoding);
             }
+            // Create tmp file if no change it will be merge
+            fs_1.default.writeFileSync(path_1.default.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), 'Force Diff for Preview Change', DefaultEncoding);
             const newBranch = yield (0, githubUtiltiy_1.gitCommitNewBranch)({
                 targetPath,
                 rootPath: WorkingDirectory,
