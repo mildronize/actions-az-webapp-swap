@@ -4,7 +4,7 @@ import {
   DefaultSlotSettingEnum,
   DefaultSensitiveEnum,
   ISwapAppSetting,
-} from '../interfaces/ISwapAppService';
+} from '../interfaces';
 import * as core from '@actions/core';
 import { constants } from '../constants';
 import { findAppSettingName } from '../utils/swapAppSettingsUtility';

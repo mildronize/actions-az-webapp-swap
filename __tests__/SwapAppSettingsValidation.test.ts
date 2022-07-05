@@ -1,5 +1,5 @@
 import { expect, test } from '@jest/globals';
-import { DefaultSensitiveEnum, DefaultSlotSettingEnum } from '../src/interfaces/ISwapAppService';
+import { DefaultSensitiveEnum, DefaultSlotSettingEnum } from '../src/interfaces';
 import SwapAppSettings, { validateUniqueAppSettingsName } from '../src/validation/SwapAppSettings';
 
 test('test validateAppSettings slotSettings in Pass Case', () => {

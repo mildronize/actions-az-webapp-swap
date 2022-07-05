@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import fs from 'fs';
 import path from 'path';
-import { ISwapAppService, IAppSetting } from '../interfaces/ISwapAppService';
+import { ISwapAppService, IAppSetting } from '../interfaces';
 import InputValidation from '../validation/InputValidation';
 import AppSettingsMasking from '../core/AppSettingsMasking';
 import SwapAppSettingsValidation from '../validation/SwapAppSettings';

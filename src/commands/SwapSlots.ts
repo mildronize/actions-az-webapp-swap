@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { ISwapAppService } from '../interfaces/ISwapAppService';
+import { ISwapAppService } from '../interfaces';
 import { webAppSwap } from '../utils/azureUtility';
 
 export class SwapSlots {

@@ -1,8 +1,8 @@
 [
   {
-    "name": "thcommunity-app-service0",
-    "resourceGroup": "thcommunity-app-rg",
-    "slot": "dev",
+    "name": "my-swap-app-test-01",
+    "resourceGroup": "rg-swap-app-test",
+    "slot": "staging",
     "targetSlot": "production", 
     "defaultSlotSetting": "true",
     "defaultSensitive": "required",
@@ -18,57 +18,7 @@
         "slotSetting": true
       },
       {
-        "name": "data4",
-        "sensitive": true,
-        "slotSetting": true
-      }
-    ]
-  },
-  {
-    "name": "thcommunity-app-service1",
-    "resourceGroup": "thcommunity-app-rg",
-    "slot": "dev",
-    "targetSlot": "production", 
-    "defaultSlotSetting": "true",
-    "defaultSensitive": "required",
-    "appSettings": [
-      {
-        "name": "data1",
-        "sensitive": false,
-        "slotSetting": true
-      },
-      {
-        "name": "data2",
-        "sensitive": false,
-        "slotSetting": true
-      },
-      {
-        "name": "data4",
-        "sensitive": true,
-        "slotSetting": true
-      }
-    ]
-  },
-  {
-    "name": "thcommunity-app-service2",
-    "resourceGroup": "thcommunity-app-rg",
-    "slot": "dev",
-    "targetSlot": "production", 
-    "defaultSlotSetting": "true",
-    "defaultSensitive": "required",
-    "appSettings": [
-       {
-        "name": "data1",
-        "sensitive": false,
-        "slotSetting": true
-      },
-      {
-        "name": "data2",
-        "sensitive": false,
-        "slotSetting": true
-      },
-      {
-        "name": "data4",
+        "name": "data3",
         "sensitive": true,
         "slotSetting": true
       }

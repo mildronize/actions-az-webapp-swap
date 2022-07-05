@@ -1,5 +1,5 @@
 import { executeProcess, parseBufferToString } from './executeProcess';
-import { IAppSetting } from '../interfaces/ISwapAppService';
+import { IAppSetting } from '../interfaces';
 import { stripIndent } from 'common-tags';
 import { Output } from 'promisify-child-process';
 

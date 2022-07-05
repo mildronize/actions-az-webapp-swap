@@ -4,7 +4,7 @@ import {
   DefaultSlotSettingEnum,
   ISwapAppSetting,
   IAppSetting,
-} from '../interfaces/ISwapAppService';
+} from '../interfaces';
 import * as core from '@actions/core';
 
 export interface IValidateAppSettingsReturnType {

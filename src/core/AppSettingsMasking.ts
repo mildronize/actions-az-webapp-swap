@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { ISwapAppService, IAppSetting } from '../interfaces/ISwapAppService';
+import { ISwapAppService, IAppSetting } from '../interfaces';
 import crypto from 'crypto';
 import { findAppSettingName } from '../utils/swapAppSettingsUtility';
 

@@ -1,10 +1,5 @@
 import { expect, test } from '@jest/globals';
-import {
-  DefaultSensitiveEnum,
-  DefaultSlotSettingEnum,
-  IAppSetting,
-  ISwapAppService,
-} from '../src/interfaces/ISwapAppService';
+import { DefaultSensitiveEnum, DefaultSlotSettingEnum, IAppSetting, ISwapAppService } from '../src/interfaces';
 import SwapAppSettings from '../src/core/SwapAppSettings';
 
 const globalConfig = {

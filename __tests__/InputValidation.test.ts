@@ -1,6 +1,6 @@
 import { expect, test } from '@jest/globals';
 import InputValidation from '../src/validation/InputValidation';
-import { DefaultSensitiveEnum, DefaultSlotSettingEnum, ISwapAppService } from '../src/interfaces/ISwapAppService';
+import { DefaultSensitiveEnum, DefaultSlotSettingEnum, ISwapAppService } from '../src/interfaces';
 
 const swapAppService: Partial<ISwapAppService> = {
   name: '',
