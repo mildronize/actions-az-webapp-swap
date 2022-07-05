@@ -102,113 +102,77 @@ exports.GetDeploySlots = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
-const InputValidation_1 = __importDefault(__nccwpck_require__(3781));
-const AppSettingsMasking_1 = __importDefault(__nccwpck_require__(7451));
-const SwapAppSettings_1 = __importDefault(__nccwpck_require__(915));
-const azureUtility_1 = __nccwpck_require__(3573);
-const SwapAppSettings_2 = __importDefault(__nccwpck_require__(878));
+const SwapAppSettings_1 = __importDefault(__nccwpck_require__(878));
 const githubUtiltiy_1 = __nccwpck_require__(3582);
 const PathUtility_1 = __nccwpck_require__(5911);
 const constants_1 = __nccwpck_require__(5105);
+const AppSettings_1 = __importDefault(__nccwpck_require__(1682));
 const { WorkingDirectory, DefaultEncoding, gitConfig } = constants_1.constants;
 class GetDeploySlots {
     constructor() { }
+    getDeploySlot(swapAppService) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const appSetting = new AppSettings_1.default(swapAppService);
+            (yield appSetting.list()).validate().fullfill().mask();
+            const swapAppSettings = new SwapAppSettings_1.default(swapAppService);
+            return {
+                appSettings: {
+                    source: appSetting.getSource(),
+                    target: appSetting.getTarget(),
+                },
+                simulatedSwappedAppSettings: {
+                    source: swapAppSettings.simulateSwappedAppSettings(appSetting.getSource(), appSetting.getTarget()),
+                    target: swapAppSettings.simulateSwappedAppSettings(appSetting.getTarget(), appSetting.getSource()),
+                },
+            };
+        });
+    }
+    writeAppSettingsFileSync(swapAppService, appSettingsSlots) {
+        const pathUtility = new PathUtility_1.PathUtility(WorkingDirectory);
+        const { resourceGroup, name, slot, targetSlot } = swapAppService;
+        const appSettingsSourceSlot = appSettingsSlots.source;
+        const appSettingsTargetSlot = appSettingsSlots.target;
+        pathUtility.createDir(resourceGroup);
+        fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, slot), JSON.stringify(appSettingsSourceSlot, null, 2), DefaultEncoding);
+        fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(appSettingsTargetSlot, null, 2), DefaultEncoding);
+    }
     execute(swapAppServiceList, options) {
         return __awaiter(this, void 0, void 0, function* () {
             const { repo, path: targetPath, ref, token: personalAccessToken } = options;
             core.debug(`Using get-deploy-slots mode`);
             // const swapAppServiceList: ISwapAppService[] = JSON.parse(fs.readFileSync('./input.json', DefaultEncoding));
-            swapAppServiceList = InputValidation_1.default.validateArray(swapAppServiceList);
-            const appSettingSourceSlotWorkers = [];
-            const appSettingTargetSlotWorkers = [];
-            for (const config of swapAppServiceList) {
-                console.log(config.name);
-                appSettingSourceSlotWorkers.push((0, azureUtility_1.webAppListAppSettings)(config.name, config.resourceGroup, config.slot));
-                appSettingTargetSlotWorkers.push((0, azureUtility_1.webAppListAppSettings)(config.name, config.resourceGroup, config.targetSlot));
+            const getDeploySlotWorkers = [];
+            for (const swapAppService of swapAppServiceList) {
+                getDeploySlotWorkers.push(this.getDeploySlot(swapAppService));
             }
-            const appSettingsSourceSlotList = yield Promise.all(appSettingSourceSlotWorkers);
-            const appSettingsTargetSlotList = yield Promise.all(appSettingTargetSlotWorkers);
-            const simulatedSwappedAppSettingsSourceSlotList = [];
-            const simulatedSwappedAppSettingsTargetSlotList = [];
-            for (let i = 0; i < swapAppServiceList.length; i++) {
-                let swapAppService = swapAppServiceList[i];
-                let appSettingsSourceSlot = appSettingsSourceSlotList[i];
-                let appSettingsTargetSlot = appSettingsTargetSlotList[i];
-                // Validate appSettings for Source Slot
-                new SwapAppSettings_1.default(swapAppService, appSettingsSourceSlot).validate(swapAppService.slot);
-                // Validate appSettings for Target Slot
-                new SwapAppSettings_1.default(swapAppService, appSettingsTargetSlot).validate(swapAppService.targetSlot);
-                const swapAppSettings = new SwapAppSettings_2.default(swapAppService);
-                swapAppService = swapAppSettings.fullfill(appSettingsSourceSlot, swapAppService.slot);
-                swapAppService = swapAppSettings.fullfill(appSettingsTargetSlot, swapAppService.targetSlot);
-                // Make appSettings as sensitve if they are requested
-                const appSettingMasking = new AppSettingsMasking_1.default(swapAppService);
-                appSettingsSourceSlot = appSettingMasking.mask(appSettingsSourceSlot, swapAppService.slot);
-                appSettingsTargetSlot = appSettingMasking.mask(appSettingsTargetSlot, swapAppService.targetSlot);
-                simulatedSwappedAppSettingsSourceSlotList.push(swapAppSettings.simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot));
-                simulatedSwappedAppSettingsTargetSlotList.push(swapAppSettings.simulateSwappedAppSettings(appSettingsTargetSlot, appSettingsSourceSlot));
-            }
-            yield (0, githubUtiltiy_1.createBranchWhenNotExist)({
+            const deploySlotList = yield Promise.all(getDeploySlotWorkers);
+            const sharedGitConfig = {
                 repo,
                 ref,
                 personalAccessToken,
                 name: gitConfig.name,
                 email: gitConfig.email,
-            });
+            };
+            yield (0, githubUtiltiy_1.createBranchWhenNotExist)(sharedGitConfig);
             /**
              * Step 2: Commit Marked App Setting (Source Slot)
              */
             const pathUtility = new PathUtility_1.PathUtility(WorkingDirectory);
             for (let i = 0; i < swapAppServiceList.length; i++) {
-                const { resourceGroup, name, slot, targetSlot } = swapAppServiceList[i];
-                const appSettingsSourceSlot = appSettingsSourceSlotList[i];
-                const appSettingsTargetSlot = appSettingsTargetSlotList[i];
-                pathUtility.createDir(resourceGroup);
-                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, slot), JSON.stringify(appSettingsSourceSlot, null, 2), DefaultEncoding);
-                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(appSettingsTargetSlot, null, 2), DefaultEncoding);
+                this.writeAppSettingsFileSync(swapAppServiceList[i], deploySlotList[i].appSettings);
             }
-            yield (0, githubUtiltiy_1.gitCommit)({
-                targetPath,
-                rootPath: WorkingDirectory,
-                repo,
-                ref,
-                personalAccessToken,
-                name: gitConfig.name,
-                email: gitConfig.email,
-                message: 'Get App Setting',
-            });
+            yield (0, githubUtiltiy_1.gitCommit)(Object.assign(Object.assign({}, sharedGitConfig), { targetPath, rootPath: WorkingDirectory, message: 'Get App Setting' }));
             pathUtility.clean();
             /**
              * Step 3: Simulate if values are swapped (Target Slot)
              */
             for (let i = 0; i < swapAppServiceList.length; i++) {
-                const { resourceGroup, name, slot, targetSlot } = swapAppServiceList[i];
-                const simulatedSwappedAppSettingsSourceSlot = simulatedSwappedAppSettingsSourceSlotList[i];
-                const simulatedSwappedAppSettingsTargetSlot = simulatedSwappedAppSettingsTargetSlotList[i];
-                pathUtility.createDir(resourceGroup);
-                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, slot), JSON.stringify(simulatedSwappedAppSettingsSourceSlot, null, 2), DefaultEncoding);
-                fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(simulatedSwappedAppSettingsTargetSlot, null, 2), DefaultEncoding);
+                this.writeAppSettingsFileSync(swapAppServiceList[i], deploySlotList[i].simulatedSwappedAppSettings);
             }
             // Create tmp file if no change it will be merge
             fs_1.default.writeFileSync(path_1.default.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), 'Force Diff for Preview Change', DefaultEncoding);
-            const newBranch = yield (0, githubUtiltiy_1.gitCommitNewBranch)({
-                targetPath,
-                rootPath: WorkingDirectory,
-                repo,
-                ref,
-                personalAccessToken,
-                name: gitConfig.name,
-                email: gitConfig.email,
-                message: 'Get App Setting if app service is swapped',
-            });
-            yield (0, githubUtiltiy_1.createPullRequest)({
-                name: gitConfig.name,
-                email: gitConfig.email,
-                personalAccessToken,
-                ref,
-                repo,
-                sourceBranch: newBranch,
-            });
+            const newBranch = yield (0, githubUtiltiy_1.gitCommitNewBranch)(Object.assign(Object.assign({}, sharedGitConfig), { targetPath, rootPath: WorkingDirectory, message: 'Get App Setting if app service is swapped' }));
+            yield (0, githubUtiltiy_1.createPullRequest)(Object.assign(Object.assign({}, sharedGitConfig), { sourceBranch: newBranch }));
         });
     }
 }
@@ -400,6 +364,8 @@ const SwapAppSettings_1 = __importDefault(__nccwpck_require__(878));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const azureUtility_1 = __nccwpck_require__(3573);
+const SwapAppSettings_2 = __importDefault(__nccwpck_require__(915));
+const AppSettingsMasking_1 = __importDefault(__nccwpck_require__(7451));
 class AppSettings {
     constructor(swapAppService, options) {
         this.swapAppService = swapAppService;
@@ -414,6 +380,18 @@ class AppSettings {
             this.options.defaultEncoding = options.defaultEncoding;
         if (options.workingDirectory)
             this.options.workingDirectory = options.workingDirectory;
+    }
+    validate() {
+        new SwapAppSettings_2.default(this.swapAppService, this.source).validate(this.swapAppService.slot);
+        new SwapAppSettings_2.default(this.swapAppService, this.source).validate(this.swapAppService.targetSlot);
+        return this;
+    }
+    mask() {
+        // Make appSettings as sensitve if they are requested
+        const appSettingMasking = new AppSettingsMasking_1.default(this.swapAppService);
+        this.source = appSettingMasking.mask(this.source, this.swapAppService.slot);
+        this.target = appSettingMasking.mask(this.target, this.swapAppService.targetSlot);
+        return this;
     }
     list() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -5467,7 +5445,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = undefined;
 
-var _oneLineCommaLists = __nccwpck_require__(6133);
+var _oneLineCommaLists = __nccwpck_require__(7964);
 
 var _oneLineCommaLists2 = _interopRequireDefault(_oneLineCommaLists);
 
@@ -5479,7 +5457,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 6133:
+/***/ 7964:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -5644,7 +5622,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = undefined;
 
-var _oneLineInlineLists = __nccwpck_require__(5474);
+var _oneLineInlineLists = __nccwpck_require__(1638);
 
 var _oneLineInlineLists2 = _interopRequireDefault(_oneLineInlineLists);
 
@@ -5656,7 +5634,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 5474:
+/***/ 1638:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -17905,7 +17883,7 @@ var _index153 = _interopRequireDefault(__nccwpck_require__(4018));
 
 var _index154 = _interopRequireDefault(__nccwpck_require__(5815));
 
-var _index155 = _interopRequireDefault(__nccwpck_require__(9321));
+var _index155 = _interopRequireDefault(__nccwpck_require__(6133));
 
 var _index156 = _interopRequireDefault(__nccwpck_require__(9571));
 
@@ -21776,7 +21754,7 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 8669:
+/***/ 5474:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -22076,7 +22054,7 @@ var _index2 = _interopRequireDefault(__nccwpck_require__(368));
 
 var _index3 = _interopRequireDefault(__nccwpck_require__(2430));
 
-var _index4 = _interopRequireDefault(__nccwpck_require__(8669));
+var _index4 = _interopRequireDefault(__nccwpck_require__(5474));
 
 var _index5 = _interopRequireDefault(__nccwpck_require__(1338));
 
@@ -22195,7 +22173,7 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 9321:
+/***/ 6133:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";

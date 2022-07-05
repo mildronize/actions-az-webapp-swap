@@ -5,6 +5,8 @@ import SwapAppSettings from './SwapAppSettings';
 import path from 'path';
 import fs from 'fs';
 import { webAppListAppSettings, webAppSetAppSettings } from '../utils/azureUtility';
+import SwapAppSettingsValidation from '../validation/SwapAppSettings';
+import AppSettingsMasking from './AppSettingsMasking';
 
 interface IAppSettingOption {
   defaultEncoding: fs.WriteFileOptions;
@@ -23,6 +25,20 @@ export default class AppSettings {
     options = options ? options : {};
     if (options.defaultEncoding) this.options.defaultEncoding = options.defaultEncoding;
     if (options.workingDirectory) this.options.workingDirectory = options.workingDirectory;
+  }
+
+  public validate() {
+    new SwapAppSettingsValidation(this.swapAppService, this.source).validate(this.swapAppService.slot);
+    new SwapAppSettingsValidation(this.swapAppService, this.source).validate(this.swapAppService.targetSlot);
+    return this;
+  }
+
+  public mask() {
+    // Make appSettings as sensitve if they are requested
+    const appSettingMasking = new AppSettingsMasking(this.swapAppService);
+    this.source = appSettingMasking.mask(this.source, this.swapAppService.slot);
+    this.target = appSettingMasking.mask(this.target, this.swapAppService.targetSlot);
+    return this;
   }
 
   public async list() {
