@@ -29,7 +29,7 @@ export class GetDeploySlots {
     core.debug(`Using get-deploy-slots mode`);
 
     // const swapAppServiceList: ISwapAppService[] = JSON.parse(fs.readFileSync('./input.json', DefaultEncoding));
-    InputValidation.validateArray(swapAppServiceList);
+    swapAppServiceList = InputValidation.validateArray(swapAppServiceList);
 
     const appSettingSourceSlotWorkers: Promise<IAppSetting[]>[] = [];
     const appSettingTargetSlotWorkers: Promise<IAppSetting[]>[] = [];

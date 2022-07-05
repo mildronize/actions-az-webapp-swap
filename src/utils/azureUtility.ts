@@ -13,6 +13,17 @@ const azureCommands = {
           --resource-group ${resourceGroup}
   `;
   },
+
+  webAppListConnectionString: (name: string, resourceGroup: string, slot?: string) => {
+    const azSlotCommand = slot !== 'production' && slot !== undefined ? `--slot ${slot}` : '';
+    return stripIndent`
+      az webapp config connection-string list \\
+          --name ${name} \\
+          ${azSlotCommand} \\
+          --resource-group ${resourceGroup}
+  `;
+  },
+
   webAppSetAppSettingsByFile: (name: string, resourceGroup: string, slot: string, appSettingPath: string) => {
     const azSlotCommand = slot !== 'production' && slot !== undefined ? `--slot ${slot}` : '';
     return stripIndent`

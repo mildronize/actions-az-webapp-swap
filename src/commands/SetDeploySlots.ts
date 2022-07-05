@@ -6,7 +6,6 @@ import { webAppListAppSettings, webAppSetAppSettings } from '../utils/azureUtili
 import InputValidation from '../validation/InputValidation';
 import { constants } from '../constants';
 import path from 'path';
-import { executeBatchProcess } from '../utils/executeProcess';
 const { DefaultEncoding, WorkingDirectory } = constants;
 
 interface IPostAction {
@@ -18,7 +17,7 @@ interface IPostAction {
 
 async function getAppSettings(swapAppService: ISwapAppService, postAction?: IPostAction) {
   core.info('Validating Action Input...');
-  InputValidation.validate(swapAppService);
+  swapAppService = InputValidation.validate(swapAppService);
 
   core.info('Listing App Setting from Azure Web App (Azure App Service) ...');
   let [appSettingsSourceSlot, appSettingsTargetSlot] = await Promise.all([

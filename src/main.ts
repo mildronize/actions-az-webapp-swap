@@ -56,9 +56,9 @@ async function main() {
     return await new SwapSlots(swapAppService).execute();
   }
   if (input.mode === 'clean') {
-    if (!input.repo) throw new Error(`repo input is required on get-deploy-slots mode`);
-    if (!input.token) throw new Error(`token input is required on get-deploy-slots mode`);
-    if (!input.ref) throw new Error(`ref input is required on get-deploy-slots mode`);
+    if (!input.repo) throw new Error(`repo input is required on clean mode`);
+    if (!input.token) throw new Error(`token input is required on clean mode`);
+    if (!input.ref) throw new Error(`ref input is required on clean mode`);
     const { repo, token, ref } = input;
     return await new Clean({
       repo,

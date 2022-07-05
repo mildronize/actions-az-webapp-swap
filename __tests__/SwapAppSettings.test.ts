@@ -12,6 +12,7 @@ const globalConfig = {
   resourceGroup: 'resourceGroup name',
   slot: 'production',
   targetSlot: 'staging',
+  connectionStrings: [],
 };
 
 // test('test SwapAppSettings slotSettings in Fail Case', () => {
@@ -80,6 +81,7 @@ test('test SwapAppSettings slotSettings if one app setting is missing (defaultSl
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -130,6 +132,7 @@ test('test SwapAppSettings slotSettings if one app setting is missing (defaultSl
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -180,6 +183,7 @@ test('test SwapAppSettings slotSettings if one app setting is missing (defaultSl
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -230,6 +234,7 @@ test('test SwapAppSettings sensitive if one app setting is missing (defaultSensi
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -281,6 +286,7 @@ test('test SwapAppSettings SlotSetting override exisitng app settings (defaultSl
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -335,6 +341,7 @@ test('test SwapAppSettings which fullfill can be stacked', () => {
   };
   let swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -409,6 +416,7 @@ test('test SwapAppSettings which fullfill can be merged', () => {
   };
   let swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -501,6 +509,7 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=True , source 
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -562,6 +571,7 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -623,6 +633,7 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=True , source 
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -674,6 +685,7 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -730,6 +742,7 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=True , source 
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -786,6 +799,7 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
@@ -837,6 +851,7 @@ test('test SwapAppSettings.applyAppSetting', () => {
   };
   const swapAppService: ISwapAppService = {
     ...sharedConfig,
+    connectionStrings: [],
     appSettings: [
       {
         name: 'config_1',
