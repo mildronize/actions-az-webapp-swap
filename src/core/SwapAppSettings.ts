@@ -3,6 +3,7 @@ import {
   IAppSetting,
   DefaultSlotSettingEnum,
   DefaultSensitiveEnum,
+  ISwapAppSetting,
 } from '../interfaces/ISwapAppService';
 import * as core from '@actions/core';
 import { constants } from '../constants';
@@ -26,33 +27,11 @@ export default class SwapAppSettings {
     for (const appSetting of appSettings) {
       const found = findAppSettingName(appSetting.name, this.swapAppService.appSettings);
       if (found < 0) {
-        // Prepare Sensitive
-        const sensitive =
-          this.swapAppService.defaultSensitive === DefaultSensitiveEnum.false ? false : FallbackValue.sensitive;
-        // Prepare slotSetting
-        let slotSetting =
-          this.swapAppService.defaultSlotSetting === DefaultSlotSettingEnum.inherit
-            ? appSetting.slotSetting
-            : FallbackValue.slotSetting;
-        slotSetting =
-          this.swapAppService.defaultSlotSetting === DefaultSlotSettingEnum.false ? false : FallbackValue.slotSetting;
-        /// Start Fullfill
-        this.swapAppService.appSettings.push({
-          name: appSetting.name,
-          sensitive,
-          slotSetting,
-          // It will use for merging between 2 app settings
-          baseSlotSetting: appSetting.slotSetting,
-        });
+        this.swapAppService.appSettings.push(this.generateAppSetting(appSetting));
       } else {
         // If existing it will merge between 2 app settings
-        const tmpAppSetting = this.swapAppService.appSettings[found];
-        if (tmpAppSetting.baseSlotSetting !== undefined) {
-          tmpAppSetting.baseSlotSetting = tmpAppSetting.baseSlotSetting || appSetting.slotSetting;
-          tmpAppSetting.slotSetting = tmpAppSetting.slotSetting || appSetting.slotSetting;
-        } else {
-          tmpAppSetting.baseSlotSetting = appSetting.slotSetting;
-        }
+        let foundAppSetting = this.swapAppService.appSettings[found];
+        foundAppSetting = this.mergeAppSettings(appSetting, foundAppSetting);
       }
     }
 
@@ -61,6 +40,36 @@ export default class SwapAppSettings {
       else appSetting.slots = [slot];
     }
     return this.swapAppService;
+  }
+
+  private generateAppSetting(appSetting: IAppSetting): ISwapAppSetting {
+    // Prepare Sensitive
+    const sensitive =
+      this.swapAppService.defaultSensitive === DefaultSensitiveEnum.false ? false : FallbackValue.sensitive;
+    // Prepare slotSetting
+    let slotSetting =
+      this.swapAppService.defaultSlotSetting === DefaultSlotSettingEnum.inherit
+        ? appSetting.slotSetting
+        : FallbackValue.slotSetting;
+    slotSetting =
+      this.swapAppService.defaultSlotSetting === DefaultSlotSettingEnum.false ? false : FallbackValue.slotSetting;
+    return {
+      name: appSetting.name,
+      sensitive,
+      slotSetting,
+      // It will use for merging between 2 app settings
+      baseSlotSetting: appSetting.slotSetting,
+    };
+  }
+
+  private mergeAppSettings(appSetting: IAppSetting, swapAppSetting: ISwapAppSetting) {
+    if (swapAppSetting.baseSlotSetting !== undefined) {
+      swapAppSetting.baseSlotSetting = swapAppSetting.baseSlotSetting || appSetting.slotSetting;
+      swapAppSetting.slotSetting = swapAppSetting.slotSetting || appSetting.slotSetting;
+    } else {
+      swapAppSetting.baseSlotSetting = appSetting.slotSetting;
+    }
+    return swapAppSetting;
   }
 
   public simulateSwappedAppSettings(
