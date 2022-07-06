@@ -8,6 +8,7 @@ import {
 import * as core from '@actions/core';
 import { constants } from '../constants';
 import { findAppSettingName } from '../utils/swapAppSettingsUtility';
+import { AppSettingsType } from './AppSettingsBase';
 
 const { FallbackValue } = constants;
 
@@ -73,6 +74,7 @@ export default class SwapAppSettings {
   }
 
   public simulateSwappedAppSettings(
+    type: AppSettingsType,
     sourceSlotAppSettings: IAppSetting[],
     targetSlotAppSettings: IAppSetting[]
   ): IAppSetting[] {
@@ -83,15 +85,20 @@ export default class SwapAppSettings {
     const result: IAppSetting[] = [];
     for (const swapAppSettings of this.swapAppService.appSettings) {
       let appSetting: Record<string, any> = { name: swapAppSettings.name, slotSetting: swapAppSettings.slotSetting };
+
       const foundSourceIndex = findAppSettingName(swapAppSettings.name, sourceSlotAppSettings);
       const foundTargetIndex = findAppSettingName(swapAppSettings.name, targetSlotAppSettings);
       if (swapAppSettings.slotSetting === true) {
         if (foundSourceIndex >= 0) {
+          if (type === AppSettingsType.ConnectionStrings)
+            appSetting.type = sourceSlotAppSettings[foundSourceIndex].type;
           appSetting.value = sourceSlotAppSettings[foundSourceIndex].value;
           result.push(appSetting as IAppSetting);
         }
       } else {
         if (foundTargetIndex >= 0) {
+          if (type === AppSettingsType.ConnectionStrings)
+            appSetting.type = targetSlotAppSettings[foundTargetIndex].type;
           appSetting.value = targetSlotAppSettings[foundTargetIndex].value;
           result.push(appSetting as IAppSetting);
         }

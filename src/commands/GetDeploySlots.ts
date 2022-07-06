@@ -44,8 +44,8 @@ export class GetDeploySlots {
         target: appSetting.getTarget(),
       },
       simulatedSwappedAppSettings: {
-        source: swapAppSettings.simulateSwappedAppSettings(appSetting.getSource(), appSetting.getTarget()),
-        target: swapAppSettings.simulateSwappedAppSettings(appSetting.getTarget(), appSetting.getSource()),
+        source: swapAppSettings.simulateSwappedAppSettings(type, appSetting.getSource(), appSetting.getTarget()),
+        target: swapAppSettings.simulateSwappedAppSettings(type, appSetting.getTarget(), appSetting.getSource()),
       },
     };
   }
@@ -134,7 +134,7 @@ export class GetDeploySlots {
       this.writeAppSettingsFileSync(
         AppSettingsType.ConnectionStrings,
         swapAppServiceList[i],
-        connectionStringsSlotList[i].appSettings
+        connectionStringsSlotList[i].simulatedSwappedAppSettings
       );
     }
 

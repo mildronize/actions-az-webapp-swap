@@ -122,8 +122,8 @@ class GetDeploySlots {
                     target: appSetting.getTarget(),
                 },
                 simulatedSwappedAppSettings: {
-                    source: swapAppSettings.simulateSwappedAppSettings(appSetting.getSource(), appSetting.getTarget()),
-                    target: swapAppSettings.simulateSwappedAppSettings(appSetting.getTarget(), appSetting.getSource()),
+                    source: swapAppSettings.simulateSwappedAppSettings(type, appSetting.getSource(), appSetting.getTarget()),
+                    target: swapAppSettings.simulateSwappedAppSettings(type, appSetting.getTarget(), appSetting.getSource()),
                 },
             };
         });
@@ -731,6 +731,7 @@ const interfaces_1 = __nccwpck_require__(9768);
 const core = __importStar(__nccwpck_require__(2186));
 const constants_1 = __nccwpck_require__(5105);
 const swapAppSettingsUtility_1 = __nccwpck_require__(7783);
+const AppSettingsBase_1 = __nccwpck_require__(2797);
 const { FallbackValue } = constants_1.constants;
 class SwapAppSettings {
     constructor(swapAppService) {
@@ -791,7 +792,7 @@ class SwapAppSettings {
         }
         return swapAppSetting;
     }
-    simulateSwappedAppSettings(sourceSlotAppSettings, targetSlotAppSettings) {
+    simulateSwappedAppSettings(type, sourceSlotAppSettings, targetSlotAppSettings) {
         /**
          * If SlotSetting = True,  Get value from source Slot,
          * If SlotSetting = Flase, Get value from target Slot.
@@ -803,12 +804,16 @@ class SwapAppSettings {
             const foundTargetIndex = (0, swapAppSettingsUtility_1.findAppSettingName)(swapAppSettings.name, targetSlotAppSettings);
             if (swapAppSettings.slotSetting === true) {
                 if (foundSourceIndex >= 0) {
+                    if (type === AppSettingsBase_1.AppSettingsType.ConnectionStrings)
+                        appSetting.type = sourceSlotAppSettings[foundSourceIndex].type;
                     appSetting.value = sourceSlotAppSettings[foundSourceIndex].value;
                     result.push(appSetting);
                 }
             }
             else {
                 if (foundTargetIndex >= 0) {
+                    if (type === AppSettingsBase_1.AppSettingsType.ConnectionStrings)
+                        appSetting.type = targetSlotAppSettings[foundTargetIndex].type;
                     appSetting.value = targetSlotAppSettings[foundTargetIndex].value;
                     result.push(appSetting);
                 }
