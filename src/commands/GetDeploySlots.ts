@@ -106,6 +106,11 @@ export class GetDeploySlots {
         swapAppServiceList[i],
         appSettingsSlotList[i].appSettings
       );
+      this.writeAppSettingsFileSync(
+        AppSettingsType.ConnectionStrings,
+        swapAppServiceList[i],
+        connectionStringsSlotList[i].appSettings
+      );
     }
 
     await gitCommit({
@@ -125,6 +130,11 @@ export class GetDeploySlots {
         AppSettingsType.AppSettings,
         swapAppServiceList[i],
         appSettingsSlotList[i].simulatedSwappedAppSettings
+      );
+      this.writeAppSettingsFileSync(
+        AppSettingsType.ConnectionStrings,
+        swapAppServiceList[i],
+        connectionStringsSlotList[i].appSettings
       );
     }
 

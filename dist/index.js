@@ -163,6 +163,7 @@ class GetDeploySlots {
             const pathUtility = new PathUtility_1.PathUtility(WorkingDirectory);
             for (let i = 0; i < swapAppServiceList.length; i++) {
                 this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.AppSettings, swapAppServiceList[i], appSettingsSlotList[i].appSettings);
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.ConnectionStrings, swapAppServiceList[i], connectionStringsSlotList[i].appSettings);
             }
             yield (0, githubUtiltiy_1.gitCommit)(Object.assign(Object.assign({}, sharedGitConfig), { targetPath, rootPath: WorkingDirectory, message: 'Get App Setting' }));
             pathUtility.clean();
@@ -171,6 +172,7 @@ class GetDeploySlots {
              */
             for (let i = 0; i < swapAppServiceList.length; i++) {
                 this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.AppSettings, swapAppServiceList[i], appSettingsSlotList[i].simulatedSwappedAppSettings);
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.ConnectionStrings, swapAppServiceList[i], connectionStringsSlotList[i].simulatedSwappedAppSettings);
             }
             // Create tmp file if no change it will be merge
             fs_1.default.writeFileSync(path_1.default.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), 'Force Diff for Preview Change', DefaultEncoding);
@@ -480,7 +482,6 @@ class AppSettingsBase {
             return this;
         });
     }
-    ;
     set(slotType) {
         return __awaiter(this, void 0, void 0, function* () { });
     }
