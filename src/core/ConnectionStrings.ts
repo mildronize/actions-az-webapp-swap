@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { IAppSetting, ISwapAppService, SlotType } from '../interfaces';
-import { webAppListConnectionString } from '../utils/azureUtility';
+import { webAppListConnectionStrings, webAppSetConnectionStrings } from '../utils/azureUtility';
 import AppSettingsBase, { AppSettingsType, IAppSettingOption } from './AppSettingsBase';
 
 export default class ConnectionStrings extends AppSettingsBase {
@@ -11,26 +11,21 @@ export default class ConnectionStrings extends AppSettingsBase {
     super(swapAppService, AppSettingsType.ConnectionStrings, options);
   }
 
-  /**
-   * call `list()` function after create a object
-   * @returns AppSettings
-   */
-
+  /** @override */
   public async list() {
     core.info('Listing App Setting from Azure Web App (Azure App Service) ...');
     const { name, resourceGroup, slot, targetSlot } = this.swapAppService;
     [this.source, this.target] = await Promise.all([
-      webAppListConnectionString(name, resourceGroup, slot),
-      webAppListConnectionString(name, resourceGroup, targetSlot),
+      webAppListConnectionStrings(name, resourceGroup, slot),
+      webAppListConnectionStrings(name, resourceGroup, targetSlot),
     ]);
     return this;
   }
 
-  public getSource() {
-    return this.source;
-  }
-
-  public getTarget() {
-    return this.target;
+  /** @override */
+  public async setWebApp(appSettings: IAppSetting[], slot: string) {
+    const { name, resourceGroup } = this.swapAppService;
+    core.info('Start set ConnectionString');
+    await webAppSetConnectionStrings(name, resourceGroup, slot, appSettings);
   }
 }

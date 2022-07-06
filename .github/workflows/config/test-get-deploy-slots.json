@@ -5,7 +5,7 @@
     "slot": "staging",
     "targetSlot": "production",
     "defaultSlotSetting": "true",
-    "defaultSensitive": "required",
+    "defaultSensitive": "false",
     "appSettings": [
       {
         "name": "data1",

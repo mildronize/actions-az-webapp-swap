@@ -1,12 +1,8 @@
 import * as core from '@actions/core';
 import { IAppSetting, ISwapAppService, SlotType } from '../interfaces';
-import InputValidation from '../validation/InputValidation';
-import SwapAppSettings from './SwapAppSettings';
 import path from 'path';
 import fs from 'fs';
 import { webAppListAppSettings, webAppSetAppSettings } from '../utils/azureUtility';
-import SwapAppSettingsValidation from '../validation/SwapAppSettings';
-import AppSettingsMasking from './AppSettingsMasking';
 import AppSettingsBase, { AppSettingsType, IAppSettingOption } from './AppSettingsBase';
 
 export default class AppSettings extends AppSettingsBase {
@@ -14,11 +10,7 @@ export default class AppSettings extends AppSettingsBase {
     super(swapAppService, AppSettingsType.AppSettings, options);
   }
 
-  /**
-   * call `list()` function after create a object
-   * @returns AppSettings
-   */
-
+  /** @override */
   public async list() {
     core.info('Listing App Setting from Azure Web App (Azure App Service) ...');
     const { name, resourceGroup, slot, targetSlot } = this.swapAppService;
@@ -29,8 +21,8 @@ export default class AppSettings extends AppSettingsBase {
     return this;
   }
 
-  public async set(slotType: SlotType) {
-    const { appSettings, slot } = this.getSlotConfig(slotType);
+  /** @override */
+  public async setWebApp(appSettings: IAppSetting[], slot: string) {
     const { workingDirectory, defaultEncoding } = this.options;
     const { name, resourceGroup } = this.swapAppService;
     const appSettingPath = path.resolve(workingDirectory, `${name}-${slot}`);

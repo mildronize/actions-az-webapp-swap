@@ -219,13 +219,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SetDeploySlots = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const AppSettings_1 = __importDefault(__nccwpck_require__(1682));
+const AppSettingsBase_1 = __nccwpck_require__(2797);
+const AppSettingsProviderFactory_1 = __nccwpck_require__(8131);
 class SetDeploySlots {
     constructor(swapAppService) {
         this.swapAppService = swapAppService;
@@ -234,10 +232,18 @@ class SetDeploySlots {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug(`Using set-deploy-slots mode`);
             core.info('Getting App Setting from Azure ');
-            const appSetting = new AppSettings_1.default(this.swapAppService);
+            yield Promise.all([
+                this.setAppSettings(AppSettingsBase_1.AppSettingsType.AppSettings),
+                this.setAppSettings(AppSettingsBase_1.AppSettingsType.ConnectionStrings),
+            ]);
+        });
+    }
+    setAppSettings(type) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const appSetting = AppSettingsProviderFactory_1.AppSettingsProviderFactory.getAppSettingsProvider(type, this.swapAppService);
             (yield appSetting.list()).fullfill().apply();
             core.info('Setting App Setting to Azure');
-            yield Promise.all([appSetting.set('source'), appSetting.set('target')]);
+            yield Promise.all([appSetting.setWebAppSourceSlot(), appSetting.setWebAppTargetSlot()]);
         });
     }
 }
@@ -372,10 +378,7 @@ class AppSettings extends AppSettingsBase_1.default {
     constructor(swapAppService, options) {
         super(swapAppService, AppSettingsBase_1.AppSettingsType.AppSettings, options);
     }
-    /**
-     * call `list()` function after create a object
-     * @returns AppSettings
-     */
+    /** @override */
     list() {
         return __awaiter(this, void 0, void 0, function* () {
             core.info('Listing App Setting from Azure Web App (Azure App Service) ...');
@@ -387,9 +390,9 @@ class AppSettings extends AppSettingsBase_1.default {
             return this;
         });
     }
-    set(slotType) {
+    /** @override */
+    setWebApp(appSettings, slot) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { appSettings, slot } = this.getSlotConfig(slotType);
             const { workingDirectory, defaultEncoding } = this.options;
             const { name, resourceGroup } = this.swapAppService;
             const appSettingPath = path_1.default.resolve(workingDirectory, `${name}-${slot}`);
@@ -483,8 +486,10 @@ class AppSettingsBase {
             return this;
         });
     }
-    set(slotType) {
-        return __awaiter(this, void 0, void 0, function* () { });
+    setWebApp(appSettings, slot) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error(`setWebApp is not implement yet`);
+        });
     }
     validate() {
         new SwapAppSettings_2.default(this.swapAppService, this.source).validate(this.swapAppService.slot);
@@ -513,18 +518,11 @@ class AppSettingsBase {
         this.target = swapAppSettings.applyAppSetting(this.target);
         return this;
     }
-    getSlotConfig(slotOption) {
-        if (slotOption === 'source')
-            return {
-                appSettings: this.source,
-                slot: this.swapAppService.slot,
-            };
-        if (slotOption === 'target')
-            return {
-                appSettings: this.target,
-                slot: this.swapAppService.targetSlot,
-            };
-        throw new Error(`getSlotConfig requires 'source' or 'target'`);
+    setWebAppSourceSlot() {
+        this.setWebApp(this.source, this.swapAppService.slot);
+    }
+    setWebAppTargetSlot() {
+        this.setWebApp(this.target, this.swapAppService.targetSlot);
     }
     getSource() {
         return this.source;
@@ -675,26 +673,25 @@ class ConnectionStrings extends AppSettingsBase_1.default {
         this.source = [];
         this.target = [];
     }
-    /**
-     * call `list()` function after create a object
-     * @returns AppSettings
-     */
+    /** @override */
     list() {
         return __awaiter(this, void 0, void 0, function* () {
             core.info('Listing App Setting from Azure Web App (Azure App Service) ...');
             const { name, resourceGroup, slot, targetSlot } = this.swapAppService;
             [this.source, this.target] = yield Promise.all([
-                (0, azureUtility_1.webAppListConnectionString)(name, resourceGroup, slot),
-                (0, azureUtility_1.webAppListConnectionString)(name, resourceGroup, targetSlot),
+                (0, azureUtility_1.webAppListConnectionStrings)(name, resourceGroup, slot),
+                (0, azureUtility_1.webAppListConnectionStrings)(name, resourceGroup, targetSlot),
             ]);
             return this;
         });
     }
-    getSource() {
-        return this.source;
-    }
-    getTarget() {
-        return this.target;
+    /** @override */
+    setWebApp(appSettings, slot) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { name, resourceGroup } = this.swapAppService;
+            core.info('Start set ConnectionString');
+            yield (0, azureUtility_1.webAppSetConnectionStrings)(name, resourceGroup, slot, appSettings);
+        });
     }
 }
 exports.default = ConnectionStrings;
@@ -1081,10 +1078,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.webAppSwap = exports.webAppSetAppSettings = exports.webAppListAppSettings = exports.webAppListConnectionString = void 0;
+exports.webAppSwap = exports.webAppSetAppSettings = exports.webAppListAppSettings = exports.webAppSetConnectionStrings = exports.webAppListConnectionStrings = exports.azureCommands = void 0;
 const executeProcess_1 = __nccwpck_require__(4550);
 const common_tags_1 = __nccwpck_require__(3509);
-const azureCommands = {
+exports.azureCommands = {
     webAppListAppSettings: (name, resourceGroup, slot) => {
         const azSlotCommand = slot !== 'production' && slot !== undefined ? `--slot ${slot}` : '';
         return (0, common_tags_1.stripIndent) `
@@ -1094,13 +1091,36 @@ const azureCommands = {
           --resource-group ${resourceGroup}
   `;
     },
-    webAppListConnectionString: (name, resourceGroup, slot) => {
+    webAppListConnectionStrings: (name, resourceGroup, slot) => {
         const azSlotCommand = slot !== 'production' && slot !== undefined ? `--slot ${slot}` : '';
         return (0, common_tags_1.stripIndent) `
       az webapp config connection-string list \\
           --name ${name} \\
           ${azSlotCommand} \\
           --resource-group ${resourceGroup}
+  `;
+    },
+    webAppSetConnectionString: (name, resourceGroup, appSetting, slot) => {
+        const azSlotCommand = slot !== 'production' && slot !== undefined ? `--slot ${slot}` : '';
+        /**
+         * Note: Due to Azure CLI version 2.35.0,
+         * If using `--settings` in the code, no matter slotSettings in Azure is True or False,
+         * the slotSettings will not change to be `false`
+         *
+         * In Addition, if using `--slot-settings`, it can override config slotSettings in Azure to be `true`
+         *
+         * Ref: https://docs.microsoft.com/en-us/cli/azure/webapp/config/connection-string?view=azure-cli-latest#az-webapp-config-connection-string-set
+         */
+        const slotSettingCommand = appSetting.slotSetting === true ? '--slot-settings' : '--settings';
+        const key = appSetting.name.replaceAll('"', '\\"');
+        const value = appSetting.value.replaceAll('"', '\\"');
+        return (0, common_tags_1.stripIndent) `
+      az webapp config connection-string set \\
+          --name ${name} \\
+          ${azSlotCommand} \\
+          --connection-string-type ${appSetting.type} \\
+          --resource-group ${resourceGroup} \\
+          ${slotSettingCommand} "${key}"="${value}"
   `;
     },
     webAppSetAppSettingsByFile: (name, resourceGroup, slot, appSettingPath) => {
@@ -1123,29 +1143,44 @@ const azureCommands = {
     `;
     },
 };
-function webAppListConnectionString(name, resourceGroup, slot) {
+function webAppListConnectionStrings(name, resourceGroup, slot) {
     return __awaiter(this, void 0, void 0, function* () {
-        const result = yield (0, executeProcess_1.executeProcess)(azureCommands.webAppListConnectionString(name, resourceGroup, slot));
+        const result = yield (0, executeProcess_1.executeProcess)(exports.azureCommands.webAppListConnectionStrings(name, resourceGroup, slot));
         return JSON.parse((0, executeProcess_1.parseBufferToString)(result.stdout));
     });
 }
-exports.webAppListConnectionString = webAppListConnectionString;
+exports.webAppListConnectionStrings = webAppListConnectionStrings;
+function webAppSetConnectionStrings(name, resourceGroup, slot, appSettings) {
+    return __awaiter(this, void 0, void 0, function* () {
+        /**
+         * Because Azure CLI cannot use set JSON file with connection string
+         * https://docs.microsoft.com/en-us/cli/azure/webapp/config/connection-string?view=azure-cli-latest#az-webapp-config-connection-string-set
+         * This function require to set connection string individually
+         */
+        const workers = [];
+        for (const appSetting of appSettings) {
+            workers.push((0, executeProcess_1.executeProcess)(exports.azureCommands.webAppSetConnectionString(name, resourceGroup, appSetting, slot)));
+        }
+        yield Promise.all(workers);
+    });
+}
+exports.webAppSetConnectionStrings = webAppSetConnectionStrings;
 function webAppListAppSettings(name, resourceGroup, slot) {
     return __awaiter(this, void 0, void 0, function* () {
-        const result = yield (0, executeProcess_1.executeProcess)(azureCommands.webAppListAppSettings(name, resourceGroup, slot));
+        const result = yield (0, executeProcess_1.executeProcess)(exports.azureCommands.webAppListAppSettings(name, resourceGroup, slot));
         return JSON.parse((0, executeProcess_1.parseBufferToString)(result.stdout));
     });
 }
 exports.webAppListAppSettings = webAppListAppSettings;
 function webAppSetAppSettings(name, resourceGroup, slot, appSettingPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield (0, executeProcess_1.executeProcess)(azureCommands.webAppSetAppSettingsByFile(name, resourceGroup, slot, appSettingPath));
+        return yield (0, executeProcess_1.executeProcess)(exports.azureCommands.webAppSetAppSettingsByFile(name, resourceGroup, slot, appSettingPath));
     });
 }
 exports.webAppSetAppSettings = webAppSetAppSettings;
 function webAppSwap(name, resourceGroup, slot, targetSlot) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield (0, executeProcess_1.executeProcess)(azureCommands.webAppDeploySlotSwap(name, resourceGroup, slot, targetSlot));
+        return yield (0, executeProcess_1.executeProcess)(exports.azureCommands.webAppDeploySlotSwap(name, resourceGroup, slot, targetSlot));
     });
 }
 exports.webAppSwap = webAppSwap;

@@ -44,7 +44,9 @@ export default abstract class AppSettingsBase {
     return this;
   }
 
-  public async set(slotType: SlotType) {}
+  public async setWebApp(appSettings: IAppSetting[], slot: string) {
+    throw new Error(`setWebApp is not implement yet`);
+  }
 
   public validate() {
     new SwapAppSettingsValidation(this.swapAppService, this.source).validate(this.swapAppService.slot);
@@ -77,18 +79,12 @@ export default abstract class AppSettingsBase {
     return this;
   }
 
-  protected getSlotConfig(slotOption: SlotType) {
-    if (slotOption === 'source')
-      return {
-        appSettings: this.source,
-        slot: this.swapAppService.slot,
-      };
-    if (slotOption === 'target')
-      return {
-        appSettings: this.target,
-        slot: this.swapAppService.targetSlot,
-      };
-    throw new Error(`getSlotConfig requires 'source' or 'target'`);
+  public setWebAppSourceSlot() {
+    this.setWebApp(this.source, this.swapAppService.slot);
+  }
+
+  public setWebAppTargetSlot() {
+    this.setWebApp(this.target, this.swapAppService.targetSlot);
   }
 
   public getSource() {
