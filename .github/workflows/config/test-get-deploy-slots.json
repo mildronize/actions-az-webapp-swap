@@ -3,7 +3,7 @@
     "name": "my-swap-app-test-01",
     "resourceGroup": "rg-swap-app-test",
     "slot": "staging",
-    "targetSlot": "production", 
+    "targetSlot": "production",
     "defaultSlotSetting": "true",
     "defaultSensitive": "required",
     "appSettings": [
@@ -19,6 +19,13 @@
       },
       {
         "name": "data3",
+        "sensitive": true,
+        "slotSetting": true
+      }
+    ],
+    "connectionStrings": [
+      {
+        "name": "data4",
         "sensitive": true,
         "slotSetting": true
       }

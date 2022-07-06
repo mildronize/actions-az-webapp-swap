@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import { AppSettingsType } from '../core/AppSettingsBase';
 
 export class PathUtility {
   private rootDir: string = '';
@@ -10,9 +11,9 @@ export class PathUtility {
     return path.join(this.rootPath, resourceGroup);
   }
 
-  public getAppSettingsPath(resourceGroup: string, appName: string, slot: string) {
+  public getAppSettingsPath(type: AppSettingsType, resourceGroup: string, appName: string, slot: string) {
     this.rootDir = this.getRootDir(resourceGroup);
-    return path.join(this.rootDir, `${appName}-${slot}.appsettings.json`);
+    return path.join(this.rootDir, `${appName}-${slot}.${type}.json`);
   }
 
   public createDir(resourceGroup: string) {

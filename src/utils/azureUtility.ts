@@ -46,6 +46,15 @@ const azureCommands = {
   },
 };
 
+export async function webAppListConnectionString(
+  name: string,
+  resourceGroup: string,
+  slot?: string
+): Promise<IAppSetting[]> {
+  const result = await executeProcess(azureCommands.webAppListConnectionString(name, resourceGroup, slot));
+  return JSON.parse(parseBufferToString(result.stdout));
+}
+
 export async function webAppListAppSettings(
   name: string,
   resourceGroup: string,
