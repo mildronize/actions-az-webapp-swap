@@ -40,7 +40,7 @@ jobs:
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.azure_credentials }}
-      - uses: mildronize/actions-az-webapp-swap@v0.0.9
+      - uses: mildronize/actions-az-webapp-swap@v1
         with:
           mode: get-deploy-slots
           config: ${{ needs.get-matrix.outputs.result }}
@@ -48,7 +48,9 @@ jobs:
           repo: mildronize/actions-az-webapp-swap-demo
           
   set-slot-settings:
-    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    if: >- 
+      github.event_name == 'pull_request' &&
+      github.event.action != 'closed'
     name: ${{ format('⚙️ Set Slot | {0} - {1}', matrix.name, matrix.slot) }}
     needs: [ get-matrix  ]
     runs-on: ubuntu-latest
@@ -64,13 +66,16 @@ jobs:
           creds: ${{ secrets.azure_credentials }}
       
       - name: set-slot-settings
-        uses: mildronize/actions-az-webapp-swap@v0.0.9
+        uses: mildronize/actions-az-webapp-swap@v1
         with: 
           mode: set-deploy-slots
           swap-config: ${{ toJson(matrix) }}
 
   swap-slot:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: >- 
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' && 
+      github.event.pull_request.merged == true
     name: ${{ format('🚀 Swap Slot | {0} - {1}', matrix.name, matrix.slot) }}
     needs: [ get-matrix ]
     runs-on: ubuntu-latest
@@ -86,7 +91,7 @@ jobs:
           creds: ${{ secrets.azure_credentials }}
       
       - name: set-slot-settings
-        uses: mildronize/actions-az-webapp-swap@v0.0.9
+        uses: mildronize/actions-az-webapp-swap@v1
         with: 
           mode: swap-slots
           swap-config: ${{ toJson(matrix) }}
@@ -98,11 +103,28 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: clean
-        uses: mildronize/actions-az-webapp-swap@v0.0.9
+        uses: mildronize/actions-az-webapp-swap@v1
         with: 
           mode: clean
           token: ${{ secrets.PAT }}
           repo: mildronize/actions-az-webapp-swap-demo
+
+  close:
+    if: >- 
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' && 
+      github.event.pull_request.merged == false
+    name: close PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: clean
+        uses: mildronize/actions-az-webapp-swap@v1
+        with: 
+          mode: clean
+          token: ${{ secrets.PAT }}
+          repo: mildronize/actions-az-webapp-swap-demo
+  
 ```
 
 ---
