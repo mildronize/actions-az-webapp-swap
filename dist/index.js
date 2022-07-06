@@ -106,13 +106,14 @@ const SwapAppSettings_1 = __importDefault(__nccwpck_require__(878));
 const githubUtiltiy_1 = __nccwpck_require__(3582);
 const PathUtility_1 = __nccwpck_require__(5911);
 const constants_1 = __nccwpck_require__(5105);
-const AppSettings_1 = __importDefault(__nccwpck_require__(1682));
+const AppSettingsProviderFactory_1 = __nccwpck_require__(8131);
+const AppSettingsBase_1 = __nccwpck_require__(2797);
 const { WorkingDirectory, DefaultEncoding, gitConfig } = constants_1.constants;
 class GetDeploySlots {
     constructor() { }
-    getDeploySlot(swapAppService) {
+    getAppSettingsAllSlots(type, swapAppService) {
         return __awaiter(this, void 0, void 0, function* () {
-            const appSetting = new AppSettings_1.default(swapAppService);
+            const appSetting = AppSettingsProviderFactory_1.AppSettingsProviderFactory.getAppSettingsProvider(type, swapAppService);
             (yield appSetting.list()).validate().fullfill().mask();
             const swapAppSettings = new SwapAppSettings_1.default(swapAppService);
             return {
@@ -121,31 +122,33 @@ class GetDeploySlots {
                     target: appSetting.getTarget(),
                 },
                 simulatedSwappedAppSettings: {
-                    source: swapAppSettings.simulateSwappedAppSettings(appSetting.getSource(), appSetting.getTarget()),
-                    target: swapAppSettings.simulateSwappedAppSettings(appSetting.getTarget(), appSetting.getSource()),
+                    source: swapAppSettings.simulateSwappedAppSettings(type, appSetting.getSource(), appSetting.getTarget()),
+                    target: swapAppSettings.simulateSwappedAppSettings(type, appSetting.getTarget(), appSetting.getSource()),
                 },
             };
         });
     }
-    writeAppSettingsFileSync(swapAppService, appSettingsSlots) {
+    writeAppSettingsFileSync(type, swapAppService, appSettingsSlots) {
         const pathUtility = new PathUtility_1.PathUtility(WorkingDirectory);
         const { resourceGroup, name, slot, targetSlot } = swapAppService;
         const appSettingsSourceSlot = appSettingsSlots.source;
         const appSettingsTargetSlot = appSettingsSlots.target;
         pathUtility.createDir(resourceGroup);
-        fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, slot), JSON.stringify(appSettingsSourceSlot, null, 2), DefaultEncoding);
-        fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(resourceGroup, name, targetSlot), JSON.stringify(appSettingsTargetSlot, null, 2), DefaultEncoding);
+        fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(type, resourceGroup, name, slot), JSON.stringify(appSettingsSourceSlot, null, 2), DefaultEncoding);
+        fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(type, resourceGroup, name, targetSlot), JSON.stringify(appSettingsTargetSlot, null, 2), DefaultEncoding);
     }
     execute(swapAppServiceList, options) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { repo, path: targetPath, ref, token: personalAccessToken } = options;
             core.debug(`Using get-deploy-slots mode`);
-            // const swapAppServiceList: ISwapAppService[] = JSON.parse(fs.readFileSync('./input.json', DefaultEncoding));
-            const getDeploySlotWorkers = [];
+            const { repo, path: targetPath, ref, token: personalAccessToken } = options;
+            const getAppSettingsWorkers = [];
+            const getConnectionStringsWorkers = [];
             for (const swapAppService of swapAppServiceList) {
-                getDeploySlotWorkers.push(this.getDeploySlot(swapAppService));
+                getAppSettingsWorkers.push(this.getAppSettingsAllSlots(AppSettingsBase_1.AppSettingsType.AppSettings, swapAppService));
+                getConnectionStringsWorkers.push(this.getAppSettingsAllSlots(AppSettingsBase_1.AppSettingsType.ConnectionStrings, swapAppService));
             }
-            const deploySlotList = yield Promise.all(getDeploySlotWorkers);
+            const appSettingsSlotList = yield Promise.all(getAppSettingsWorkers);
+            const connectionStringsSlotList = yield Promise.all(getConnectionStringsWorkers);
             const sharedGitConfig = {
                 repo,
                 ref,
@@ -159,7 +162,8 @@ class GetDeploySlots {
              */
             const pathUtility = new PathUtility_1.PathUtility(WorkingDirectory);
             for (let i = 0; i < swapAppServiceList.length; i++) {
-                this.writeAppSettingsFileSync(swapAppServiceList[i], deploySlotList[i].appSettings);
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.AppSettings, swapAppServiceList[i], appSettingsSlotList[i].appSettings);
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.ConnectionStrings, swapAppServiceList[i], connectionStringsSlotList[i].appSettings);
             }
             yield (0, githubUtiltiy_1.gitCommit)(Object.assign(Object.assign({}, sharedGitConfig), { targetPath, rootPath: WorkingDirectory, message: 'Get App Setting' }));
             pathUtility.clean();
@@ -167,7 +171,8 @@ class GetDeploySlots {
              * Step 3: Simulate if values are swapped (Target Slot)
              */
             for (let i = 0; i < swapAppServiceList.length; i++) {
-                this.writeAppSettingsFileSync(swapAppServiceList[i], deploySlotList[i].simulatedSwappedAppSettings);
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.AppSettings, swapAppServiceList[i], appSettingsSlotList[i].simulatedSwappedAppSettings);
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.ConnectionStrings, swapAppServiceList[i], connectionStringsSlotList[i].simulatedSwappedAppSettings);
             }
             // Create tmp file if no change it will be merge
             fs_1.default.writeFileSync(path_1.default.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), 'Force Diff for Preview Change', DefaultEncoding);
@@ -214,13 +219,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SetDeploySlots = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const AppSettings_1 = __importDefault(__nccwpck_require__(1682));
+const AppSettingsBase_1 = __nccwpck_require__(2797);
+const AppSettingsProviderFactory_1 = __nccwpck_require__(8131);
 class SetDeploySlots {
     constructor(swapAppService) {
         this.swapAppService = swapAppService;
@@ -229,10 +232,18 @@ class SetDeploySlots {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug(`Using set-deploy-slots mode`);
             core.info('Getting App Setting from Azure ');
-            const appSetting = new AppSettings_1.default(this.swapAppService);
+            yield Promise.all([
+                this.setAppSettings(AppSettingsBase_1.AppSettingsType.AppSettings),
+                this.setAppSettings(AppSettingsBase_1.AppSettingsType.ConnectionStrings),
+            ]);
+        });
+    }
+    setAppSettings(type) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const appSetting = AppSettingsProviderFactory_1.AppSettingsProviderFactory.getAppSettingsProvider(type, this.swapAppService);
             (yield appSetting.list()).fullfill().apply();
             core.info('Setting App Setting to Azure');
-            yield Promise.all([appSetting.set('source'), appSetting.set('target')]);
+            yield Promise.all([appSetting.setWebAppSourceSlot(), appSetting.setWebAppTargetSlot()]);
         });
     }
 }
@@ -359,16 +370,99 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const InputValidation_1 = __importDefault(__nccwpck_require__(3781));
-const SwapAppSettings_1 = __importDefault(__nccwpck_require__(878));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const azureUtility_1 = __nccwpck_require__(3573);
+const AppSettingsBase_1 = __importStar(__nccwpck_require__(2797));
+class AppSettings extends AppSettingsBase_1.default {
+    constructor(swapAppService, options) {
+        super(swapAppService, AppSettingsBase_1.AppSettingsType.AppSettings, options);
+    }
+    /** @override */
+    list() {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.info('Listing App Setting from Azure Web App (Azure App Service) ...');
+            const { name, resourceGroup, slot, targetSlot } = this.swapAppService;
+            [this.source, this.target] = yield Promise.all([
+                (0, azureUtility_1.webAppListAppSettings)(name, resourceGroup, slot),
+                (0, azureUtility_1.webAppListAppSettings)(name, resourceGroup, targetSlot),
+            ]);
+            return this;
+        });
+    }
+    /** @override */
+    setWebApp(appSettings, slot) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { workingDirectory, defaultEncoding } = this.options;
+            const { name, resourceGroup } = this.swapAppService;
+            const appSettingPath = path_1.default.resolve(workingDirectory, `${name}-${slot}`);
+            if (!fs_1.default.existsSync(workingDirectory))
+                fs_1.default.mkdirSync(workingDirectory, { recursive: true });
+            fs_1.default.writeFileSync(appSettingPath, JSON.stringify(appSettings), defaultEncoding);
+            core.info('Start set app Setting');
+            yield (0, azureUtility_1.webAppSetAppSettings)(name, resourceGroup, slot, appSettingPath);
+            core.info('Removing file');
+            fs_1.default.rmSync(appSettingPath, { force: true });
+        });
+    }
+}
+exports.default = AppSettings;
+
+
+/***/ }),
+
+/***/ 2797:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AppSettingsType = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const InputValidation_1 = __importDefault(__nccwpck_require__(3781));
+const SwapAppSettings_1 = __importDefault(__nccwpck_require__(878));
 const SwapAppSettings_2 = __importDefault(__nccwpck_require__(915));
 const AppSettingsMasking_1 = __importDefault(__nccwpck_require__(7451));
-class AppSettings {
-    constructor(swapAppService, options) {
+var AppSettingsType;
+(function (AppSettingsType) {
+    AppSettingsType["AppSettings"] = "AppSettings";
+    AppSettingsType["ConnectionStrings"] = "ConnectionStrings";
+})(AppSettingsType = exports.AppSettingsType || (exports.AppSettingsType = {}));
+class AppSettingsBase {
+    constructor(swapAppService, type, options) {
         this.swapAppService = swapAppService;
+        this.type = type;
         this.source = [];
         this.target = [];
         this.options = {
@@ -380,6 +474,22 @@ class AppSettings {
             this.options.defaultEncoding = options.defaultEncoding;
         if (options.workingDirectory)
             this.options.workingDirectory = options.workingDirectory;
+        core.info('Validating Action Input...');
+        this.swapAppService = InputValidation_1.default.validate(this.swapAppService);
+    }
+    /**
+     * call `list()` function after create a object
+     * @returns AppSettings
+     */
+    list() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this;
+        });
+    }
+    setWebApp(appSettings, slot) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error(`setWebApp is not implement yet`);
+        });
     }
     validate() {
         new SwapAppSettings_2.default(this.swapAppService, this.source).validate(this.swapAppService.slot);
@@ -388,23 +498,10 @@ class AppSettings {
     }
     mask() {
         // Make appSettings as sensitve if they are requested
-        const appSettingMasking = new AppSettingsMasking_1.default(this.swapAppService);
+        const appSettingMasking = new AppSettingsMasking_1.default(this.swapAppService, this.type);
         this.source = appSettingMasking.mask(this.source, this.swapAppService.slot);
         this.target = appSettingMasking.mask(this.target, this.swapAppService.targetSlot);
         return this;
-    }
-    list() {
-        return __awaiter(this, void 0, void 0, function* () {
-            core.info('Validating Action Input...');
-            this.swapAppService = InputValidation_1.default.validate(this.swapAppService);
-            core.info('Listing App Setting from Azure Web App (Azure App Service) ...');
-            const { name, resourceGroup, slot, targetSlot } = this.swapAppService;
-            [this.source, this.target] = yield Promise.all([
-                (0, azureUtility_1.webAppListAppSettings)(name, resourceGroup, slot),
-                (0, azureUtility_1.webAppListAppSettings)(name, resourceGroup, targetSlot),
-            ]);
-            return this;
-        });
     }
     fullfill() {
         core.info('Fullfilling Swap config with App Setting');
@@ -421,33 +518,11 @@ class AppSettings {
         this.target = swapAppSettings.applyAppSetting(this.target);
         return this;
     }
-    set(slotType) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { appSettings, slot } = this.getSlotConfig(slotType);
-            const { workingDirectory, defaultEncoding } = this.options;
-            const { name, resourceGroup } = this.swapAppService;
-            const appSettingPath = path_1.default.resolve(workingDirectory, `${name}-${slot}`);
-            if (!fs_1.default.existsSync(workingDirectory))
-                fs_1.default.mkdirSync(workingDirectory, { recursive: true });
-            fs_1.default.writeFileSync(appSettingPath, JSON.stringify(appSettings), defaultEncoding);
-            core.info('Start set app Setting');
-            yield (0, azureUtility_1.webAppSetAppSettings)(name, resourceGroup, slot, appSettingPath);
-            core.info('Removing file');
-            fs_1.default.rmSync(appSettingPath, { force: true });
-        });
+    setWebAppSourceSlot() {
+        this.setWebApp(this.source, this.swapAppService.slot);
     }
-    getSlotConfig(slotOption) {
-        if (slotOption === 'source')
-            return {
-                appSettings: this.source,
-                slot: this.swapAppService.slot,
-            };
-        if (slotOption === 'target')
-            return {
-                appSettings: this.target,
-                slot: this.swapAppService.targetSlot,
-            };
-        throw new Error(`getSlotConfig requires 'source' or 'target'`);
+    setWebAppTargetSlot() {
+        this.setWebApp(this.target, this.swapAppService.targetSlot);
     }
     getSource() {
         return this.source;
@@ -456,7 +531,7 @@ class AppSettings {
         return this.target;
     }
 }
-exports.default = AppSettings;
+exports.default = AppSettingsBase;
 
 
 /***/ }),
@@ -493,19 +568,21 @@ exports.hashValue = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const crypto_1 = __importDefault(__nccwpck_require__(6417));
 const swapAppSettingsUtility_1 = __nccwpck_require__(7783);
+const AppSettingsBase_1 = __nccwpck_require__(2797);
 function hashValue(value) {
     const sha256Hasher = crypto_1.default.createHmac('sha3-512', process.env.HASH_SECRET || '');
     return sha256Hasher.update(value).digest('base64');
 }
 exports.hashValue = hashValue;
 class AppSettingsMasking {
-    constructor(swapAppService) {
+    constructor(swapAppService, type) {
         this.swapAppService = swapAppService;
+        this.type = type;
     }
     mask(appSettings, slot) {
         const { appSettings: swapAppSettings } = this.swapAppService;
         for (const swapAppSetting of swapAppSettings) {
-            if (swapAppSetting.sensitive === true) {
+            if (swapAppSetting.sensitive === true || this.type === AppSettingsBase_1.AppSettingsType.ConnectionStrings) {
                 const found = (0, swapAppSettingsUtility_1.findAppSettingName)(swapAppSetting.name, appSettings);
                 if (found >= 0) {
                     const foundAppSetting = appSettings[found];
@@ -520,6 +597,104 @@ class AppSettingsMasking {
     }
 }
 exports.default = AppSettingsMasking;
+
+
+/***/ }),
+
+/***/ 8131:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AppSettingsProviderFactory = void 0;
+const AppSettings_1 = __importDefault(__nccwpck_require__(1682));
+const AppSettingsBase_1 = __nccwpck_require__(2797);
+const ConnectionStrings_1 = __importDefault(__nccwpck_require__(9309));
+class AppSettingsProviderFactory {
+    static getAppSettingsProvider(type, swapAppService) {
+        if (type === AppSettingsBase_1.AppSettingsType.AppSettings) {
+            return new AppSettings_1.default(swapAppService);
+        }
+        if (type === AppSettingsBase_1.AppSettingsType.ConnectionStrings) {
+            return new ConnectionStrings_1.default(swapAppService);
+        }
+        throw new Error(`Invalid AppSetting type.`);
+    }
+}
+exports.AppSettingsProviderFactory = AppSettingsProviderFactory;
+
+
+/***/ }),
+
+/***/ 9309:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(2186));
+const azureUtility_1 = __nccwpck_require__(3573);
+const AppSettingsBase_1 = __importStar(__nccwpck_require__(2797));
+class ConnectionStrings extends AppSettingsBase_1.default {
+    constructor(swapAppService, options) {
+        super(swapAppService, AppSettingsBase_1.AppSettingsType.ConnectionStrings, options);
+        this.source = [];
+        this.target = [];
+    }
+    /** @override */
+    list() {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.info('Listing App Setting from Azure Web App (Azure App Service) ...');
+            const { name, resourceGroup, slot, targetSlot } = this.swapAppService;
+            [this.source, this.target] = yield Promise.all([
+                (0, azureUtility_1.webAppListConnectionStrings)(name, resourceGroup, slot),
+                (0, azureUtility_1.webAppListConnectionStrings)(name, resourceGroup, targetSlot),
+            ]);
+            return this;
+        });
+    }
+    /** @override */
+    setWebApp(appSettings, slot) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { name, resourceGroup } = this.swapAppService;
+            core.info('Start set ConnectionString');
+            yield (0, azureUtility_1.webAppSetConnectionStrings)(name, resourceGroup, slot, appSettings);
+        });
+    }
+}
+exports.default = ConnectionStrings;
 
 
 /***/ }),
@@ -553,6 +728,7 @@ const interfaces_1 = __nccwpck_require__(9768);
 const core = __importStar(__nccwpck_require__(2186));
 const constants_1 = __nccwpck_require__(5105);
 const swapAppSettingsUtility_1 = __nccwpck_require__(7783);
+const AppSettingsBase_1 = __nccwpck_require__(2797);
 const { FallbackValue } = constants_1.constants;
 class SwapAppSettings {
     constructor(swapAppService) {
@@ -613,7 +789,7 @@ class SwapAppSettings {
         }
         return swapAppSetting;
     }
-    simulateSwappedAppSettings(sourceSlotAppSettings, targetSlotAppSettings) {
+    simulateSwappedAppSettings(type, sourceSlotAppSettings, targetSlotAppSettings) {
         /**
          * If SlotSetting = True,  Get value from source Slot,
          * If SlotSetting = Flase, Get value from target Slot.
@@ -625,12 +801,16 @@ class SwapAppSettings {
             const foundTargetIndex = (0, swapAppSettingsUtility_1.findAppSettingName)(swapAppSettings.name, targetSlotAppSettings);
             if (swapAppSettings.slotSetting === true) {
                 if (foundSourceIndex >= 0) {
+                    if (type === AppSettingsBase_1.AppSettingsType.ConnectionStrings)
+                        appSetting.type = sourceSlotAppSettings[foundSourceIndex].type;
                     appSetting.value = sourceSlotAppSettings[foundSourceIndex].value;
                     result.push(appSetting);
                 }
             }
             else {
                 if (foundTargetIndex >= 0) {
+                    if (type === AppSettingsBase_1.AppSettingsType.ConnectionStrings)
+                        appSetting.type = targetSlotAppSettings[foundTargetIndex].type;
                     appSetting.value = targetSlotAppSettings[foundTargetIndex].value;
                     result.push(appSetting);
                 }
@@ -658,16 +838,6 @@ exports.default = SwapAppSettings;
 /***/ }),
 
 /***/ 8346:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-
-
-/***/ }),
-
-/***/ 2671:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -728,7 +898,6 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__nccwpck_require__(8346), exports);
-__exportStar(__nccwpck_require__(2671), exports);
 __exportStar(__nccwpck_require__(3172), exports);
 __exportStar(__nccwpck_require__(6864), exports);
 
@@ -873,9 +1042,9 @@ class PathUtility {
     getRootDir(resourceGroup) {
         return path_1.default.join(this.rootPath, resourceGroup);
     }
-    getAppSettingsPath(resourceGroup, appName, slot) {
+    getAppSettingsPath(type, resourceGroup, appName, slot) {
         this.rootDir = this.getRootDir(resourceGroup);
-        return path_1.default.join(this.rootDir, `${appName}-${slot}.appsettings.json`);
+        return path_1.default.join(this.rootDir, `${appName}-${slot}.${type}.json`);
     }
     createDir(resourceGroup) {
         this.rootDir = this.getRootDir(resourceGroup);
@@ -909,10 +1078,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.webAppSwap = exports.webAppSetAppSettings = exports.webAppListAppSettings = void 0;
+exports.webAppSwap = exports.webAppSetAppSettings = exports.webAppListAppSettings = exports.webAppSetConnectionStrings = exports.webAppListConnectionStrings = exports.azureCommands = void 0;
 const executeProcess_1 = __nccwpck_require__(4550);
 const common_tags_1 = __nccwpck_require__(3509);
-const azureCommands = {
+exports.azureCommands = {
     webAppListAppSettings: (name, resourceGroup, slot) => {
         const azSlotCommand = slot !== 'production' && slot !== undefined ? `--slot ${slot}` : '';
         return (0, common_tags_1.stripIndent) `
@@ -922,13 +1091,36 @@ const azureCommands = {
           --resource-group ${resourceGroup}
   `;
     },
-    webAppListConnectionString: (name, resourceGroup, slot) => {
+    webAppListConnectionStrings: (name, resourceGroup, slot) => {
         const azSlotCommand = slot !== 'production' && slot !== undefined ? `--slot ${slot}` : '';
         return (0, common_tags_1.stripIndent) `
       az webapp config connection-string list \\
           --name ${name} \\
           ${azSlotCommand} \\
           --resource-group ${resourceGroup}
+  `;
+    },
+    webAppSetConnectionString: (name, resourceGroup, appSetting, slot) => {
+        const azSlotCommand = slot !== 'production' && slot !== undefined ? `--slot ${slot}` : '';
+        /**
+         * Note: Due to Azure CLI version 2.35.0,
+         * If using `--settings` in the code, no matter slotSettings in Azure is True or False,
+         * the slotSettings will not change to be `false`
+         *
+         * In Addition, if using `--slot-settings`, it can override config slotSettings in Azure to be `true`
+         *
+         * Ref: https://docs.microsoft.com/en-us/cli/azure/webapp/config/connection-string?view=azure-cli-latest#az-webapp-config-connection-string-set
+         */
+        const slotSettingCommand = appSetting.slotSetting === true ? '--slot-settings' : '--settings';
+        const key = appSetting.name.replaceAll('"', '\\"');
+        const value = appSetting.value.replaceAll('"', '\\"');
+        return (0, common_tags_1.stripIndent) `
+      az webapp config connection-string set \\
+          --name ${name} \\
+          ${azSlotCommand} \\
+          --connection-string-type ${appSetting.type} \\
+          --resource-group ${resourceGroup} \\
+          ${slotSettingCommand} "${key}"="${value}"
   `;
     },
     webAppSetAppSettingsByFile: (name, resourceGroup, slot, appSettingPath) => {
@@ -951,22 +1143,44 @@ const azureCommands = {
     `;
     },
 };
+function webAppListConnectionStrings(name, resourceGroup, slot) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield (0, executeProcess_1.executeProcess)(exports.azureCommands.webAppListConnectionStrings(name, resourceGroup, slot));
+        return JSON.parse((0, executeProcess_1.parseBufferToString)(result.stdout));
+    });
+}
+exports.webAppListConnectionStrings = webAppListConnectionStrings;
+function webAppSetConnectionStrings(name, resourceGroup, slot, appSettings) {
+    return __awaiter(this, void 0, void 0, function* () {
+        /**
+         * Because Azure CLI cannot use set JSON file with connection string
+         * https://docs.microsoft.com/en-us/cli/azure/webapp/config/connection-string?view=azure-cli-latest#az-webapp-config-connection-string-set
+         * This function require to set connection string individually
+         */
+        const workers = [];
+        for (const appSetting of appSettings) {
+            workers.push((0, executeProcess_1.executeProcess)(exports.azureCommands.webAppSetConnectionString(name, resourceGroup, appSetting, slot)));
+        }
+        yield Promise.all(workers);
+    });
+}
+exports.webAppSetConnectionStrings = webAppSetConnectionStrings;
 function webAppListAppSettings(name, resourceGroup, slot) {
     return __awaiter(this, void 0, void 0, function* () {
-        const result = yield (0, executeProcess_1.executeProcess)(azureCommands.webAppListAppSettings(name, resourceGroup, slot));
+        const result = yield (0, executeProcess_1.executeProcess)(exports.azureCommands.webAppListAppSettings(name, resourceGroup, slot));
         return JSON.parse((0, executeProcess_1.parseBufferToString)(result.stdout));
     });
 }
 exports.webAppListAppSettings = webAppListAppSettings;
 function webAppSetAppSettings(name, resourceGroup, slot, appSettingPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield (0, executeProcess_1.executeProcess)(azureCommands.webAppSetAppSettingsByFile(name, resourceGroup, slot, appSettingPath));
+        return yield (0, executeProcess_1.executeProcess)(exports.azureCommands.webAppSetAppSettingsByFile(name, resourceGroup, slot, appSettingPath));
     });
 }
 exports.webAppSetAppSettings = webAppSetAppSettings;
 function webAppSwap(name, resourceGroup, slot, targetSlot) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield (0, executeProcess_1.executeProcess)(azureCommands.webAppDeploySlotSwap(name, resourceGroup, slot, targetSlot));
+        return yield (0, executeProcess_1.executeProcess)(exports.azureCommands.webAppDeploySlotSwap(name, resourceGroup, slot, targetSlot));
     });
 }
 exports.webAppSwap = webAppSwap;

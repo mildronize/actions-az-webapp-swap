@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import { ISwapAppService, IAppSetting } from '../interfaces';
 import crypto from 'crypto';
 import { findAppSettingName } from '../utils/swapAppSettingsUtility';
+import { AppSettingsType } from './AppSettingsBase';
 
 export function hashValue(value: string) {
   const sha256Hasher = crypto.createHmac('sha3-512', process.env.HASH_SECRET || '');
@@ -9,13 +10,13 @@ export function hashValue(value: string) {
 }
 
 export default class AppSettingsMasking {
-  constructor(private swapAppService: ISwapAppService) {}
+  constructor(private swapAppService: ISwapAppService, private type: AppSettingsType) {}
 
   public mask(appSettings: IAppSetting[], slot?: string) {
     const { appSettings: swapAppSettings } = this.swapAppService;
 
     for (const swapAppSetting of swapAppSettings) {
-      if (swapAppSetting.sensitive === true) {
+      if (swapAppSetting.sensitive === true || this.type === AppSettingsType.ConnectionStrings) {
         const found = findAppSettingName(swapAppSetting.name, appSettings);
         if (found >= 0) {
           const foundAppSetting = appSettings[found];

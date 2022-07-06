@@ -1,6 +1,7 @@
 import { expect, test } from '@jest/globals';
 import { DefaultSensitiveEnum, DefaultSlotSettingEnum, IAppSetting, ISwapAppService } from '../src/interfaces';
 import SwapAppSettings from '../src/core/SwapAppSettings';
+import { AppSettingsType } from '../src/core/AppSettingsBase';
 
 const globalConfig = {
   name: 'app-name',
@@ -543,7 +544,11 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=True , source 
     },
   ];
   expect(
-    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(
+      AppSettingsType.AppSettings,
+      appSettingsSourceSlot,
+      appSettingsTargetSlot
+    )
   ).toStrictEqual([
     {
       name: 'config_1',
@@ -605,7 +610,11 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source
     },
   ];
   expect(
-    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(
+      AppSettingsType.AppSettings,
+      appSettingsSourceSlot,
+      appSettingsTargetSlot
+    )
   ).toStrictEqual([
     {
       name: 'config_1',
@@ -662,7 +671,11 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=True , source 
     },
   ];
   expect(
-    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(
+      AppSettingsType.AppSettings,
+      appSettingsSourceSlot,
+      appSettingsTargetSlot
+    )
   ).toStrictEqual([
     {
       name: 'config_1',
@@ -714,7 +727,11 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source
     },
   ];
   expect(
-    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(
+      AppSettingsType.AppSettings,
+      appSettingsSourceSlot,
+      appSettingsTargetSlot
+    )
   ).toStrictEqual([
     {
       name: 'config_1',
@@ -771,7 +788,11 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=True , source 
     },
   ];
   expect(
-    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(
+      AppSettingsType.AppSettings,
+      appSettingsSourceSlot,
+      appSettingsTargetSlot
+    )
   ).toStrictEqual([
     {
       name: 'config_1',
@@ -828,11 +849,73 @@ test('test SwapAppSettings.simulateSwappedAppSettings slotSetting=false , source
     },
   ];
   expect(
-    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(appSettingsSourceSlot, appSettingsTargetSlot)
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(
+      AppSettingsType.AppSettings,
+      appSettingsSourceSlot,
+      appSettingsTargetSlot
+    )
   ).toStrictEqual([
     {
       name: 'config_1',
       value: 'config_1 target',
+      slotSetting: false,
+    },
+  ]);
+});
+
+test('test SwapAppSettings.simulateSwappedAppSettings connectionStrings ', () => {
+  const sharedConfig = {
+    ...globalConfig,
+    defaultSensitive: DefaultSensitiveEnum.false,
+    defaultSlotSetting: DefaultSlotSettingEnum.false,
+  };
+  const swapAppService: ISwapAppService = {
+    ...sharedConfig,
+    connectionStrings: [],
+    appSettings: [
+      {
+        name: 'config_1',
+        sensitive: false,
+        slotSetting: false,
+      },
+      {
+        name: 'config_2',
+        sensitive: false,
+        slotSetting: false,
+      },
+    ],
+  };
+  const appSettingsSourceSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 source',
+      slotSetting: true,
+    },
+    {
+      name: 'config_2',
+      value: 'config_2 source',
+      slotSetting: true,
+    },
+  ];
+  const appSettingsTargetSlot: IAppSetting[] = [
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      type: 'MySql',
+      slotSetting: true,
+    },
+  ];
+  expect(
+    new SwapAppSettings(swapAppService).simulateSwappedAppSettings(
+      AppSettingsType.ConnectionStrings,
+      appSettingsSourceSlot,
+      appSettingsTargetSlot
+    )
+  ).toStrictEqual([
+    {
+      name: 'config_1',
+      value: 'config_1 target',
+      type: 'MySql',
       slotSetting: false,
     },
   ]);
