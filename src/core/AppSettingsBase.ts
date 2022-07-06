@@ -2,9 +2,7 @@ import * as core from '@actions/core';
 import { IAppSetting, ISwapAppService, SlotType } from '../interfaces';
 import InputValidation from '../validation/InputValidation';
 import SwapAppSettings from './SwapAppSettings';
-import path from 'path';
 import fs from 'fs';
-import { webAppListAppSettings, webAppSetAppSettings } from '../utils/azureUtility';
 import SwapAppSettingsValidation from '../validation/SwapAppSettings';
 import AppSettingsMasking from './AppSettingsMasking';
 
@@ -26,7 +24,11 @@ export default abstract class AppSettingsBase {
     workingDirectory: 'swap-tmp-path',
   };
 
-  constructor(protected swapAppService: ISwapAppService, options?: Partial<IAppSettingOption>) {
+  constructor(
+    protected swapAppService: ISwapAppService,
+    protected type: AppSettingsType,
+    options?: Partial<IAppSettingOption>
+  ) {
     options = options ? options : {};
     if (options.defaultEncoding) this.options.defaultEncoding = options.defaultEncoding;
     if (options.workingDirectory) this.options.workingDirectory = options.workingDirectory;
@@ -52,7 +54,7 @@ export default abstract class AppSettingsBase {
 
   public mask() {
     // Make appSettings as sensitve if they are requested
-    const appSettingMasking = new AppSettingsMasking(this.swapAppService);
+    const appSettingMasking = new AppSettingsMasking(this.swapAppService, this.type);
     this.source = appSettingMasking.mask(this.source, this.swapAppService.slot);
     this.target = appSettingMasking.mask(this.target, this.swapAppService.targetSlot);
     return this;

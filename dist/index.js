@@ -367,10 +367,10 @@ const core = __importStar(__nccwpck_require__(2186));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const azureUtility_1 = __nccwpck_require__(3573);
-const AppSettingsBase_1 = __importDefault(__nccwpck_require__(2797));
+const AppSettingsBase_1 = __importStar(__nccwpck_require__(2797));
 class AppSettings extends AppSettingsBase_1.default {
     constructor(swapAppService, options) {
-        super(swapAppService, options);
+        super(swapAppService, AppSettingsBase_1.AppSettingsType.AppSettings, options);
     }
     /**
      * call `list()` function after create a object
@@ -457,8 +457,9 @@ var AppSettingsType;
     AppSettingsType["ConnectionStrings"] = "ConnectionStrings";
 })(AppSettingsType = exports.AppSettingsType || (exports.AppSettingsType = {}));
 class AppSettingsBase {
-    constructor(swapAppService, options) {
+    constructor(swapAppService, type, options) {
         this.swapAppService = swapAppService;
+        this.type = type;
         this.source = [];
         this.target = [];
         this.options = {
@@ -492,7 +493,7 @@ class AppSettingsBase {
     }
     mask() {
         // Make appSettings as sensitve if they are requested
-        const appSettingMasking = new AppSettingsMasking_1.default(this.swapAppService);
+        const appSettingMasking = new AppSettingsMasking_1.default(this.swapAppService, this.type);
         this.source = appSettingMasking.mask(this.source, this.swapAppService.slot);
         this.target = appSettingMasking.mask(this.target, this.swapAppService.targetSlot);
         return this;
@@ -569,19 +570,21 @@ exports.hashValue = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const crypto_1 = __importDefault(__nccwpck_require__(6417));
 const swapAppSettingsUtility_1 = __nccwpck_require__(7783);
+const AppSettingsBase_1 = __nccwpck_require__(2797);
 function hashValue(value) {
     const sha256Hasher = crypto_1.default.createHmac('sha3-512', process.env.HASH_SECRET || '');
     return sha256Hasher.update(value).digest('base64');
 }
 exports.hashValue = hashValue;
 class AppSettingsMasking {
-    constructor(swapAppService) {
+    constructor(swapAppService, type) {
         this.swapAppService = swapAppService;
+        this.type = type;
     }
     mask(appSettings, slot) {
         const { appSettings: swapAppSettings } = this.swapAppService;
         for (const swapAppSetting of swapAppSettings) {
-            if (swapAppSetting.sensitive === true) {
+            if (swapAppSetting.sensitive === true || this.type === AppSettingsBase_1.AppSettingsType.ConnectionStrings) {
                 const found = (0, swapAppSettingsUtility_1.findAppSettingName)(swapAppSetting.name, appSettings);
                 if (found >= 0) {
                     const foundAppSetting = appSettings[found];
@@ -662,16 +665,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const azureUtility_1 = __nccwpck_require__(3573);
-const AppSettingsBase_1 = __importDefault(__nccwpck_require__(2797));
+const AppSettingsBase_1 = __importStar(__nccwpck_require__(2797));
 class ConnectionStrings extends AppSettingsBase_1.default {
     constructor(swapAppService, options) {
-        super(swapAppService, options);
+        super(swapAppService, AppSettingsBase_1.AppSettingsType.ConnectionStrings, options);
         this.source = [];
         this.target = [];
     }

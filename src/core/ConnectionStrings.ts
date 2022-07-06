@@ -1,20 +1,14 @@
 import * as core from '@actions/core';
 import { IAppSetting, ISwapAppService, SlotType } from '../interfaces';
-import InputValidation from '../validation/InputValidation';
-import SwapAppSettings from './SwapAppSettings';
-import path from 'path';
-import fs from 'fs';
-import { webAppListAppSettings, webAppListConnectionString, webAppSetAppSettings } from '../utils/azureUtility';
-import SwapAppSettingsValidation from '../validation/SwapAppSettings';
-import AppSettingsMasking from './AppSettingsMasking';
-import AppSettingsBase, { IAppSettingOption } from './AppSettingsBase';
+import { webAppListConnectionString } from '../utils/azureUtility';
+import AppSettingsBase, { AppSettingsType, IAppSettingOption } from './AppSettingsBase';
 
 export default class ConnectionStrings extends AppSettingsBase {
   protected source: IAppSetting[] = [];
   protected target: IAppSetting[] = [];
 
   constructor(swapAppService: ISwapAppService, options?: Partial<IAppSettingOption>) {
-    super(swapAppService, options);
+    super(swapAppService, AppSettingsType.ConnectionStrings, options);
   }
 
   /**

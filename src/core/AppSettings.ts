@@ -7,11 +7,11 @@ import fs from 'fs';
 import { webAppListAppSettings, webAppSetAppSettings } from '../utils/azureUtility';
 import SwapAppSettingsValidation from '../validation/SwapAppSettings';
 import AppSettingsMasking from './AppSettingsMasking';
-import AppSettingsBase, { IAppSettingOption } from './AppSettingsBase';
+import AppSettingsBase, { AppSettingsType, IAppSettingOption } from './AppSettingsBase';
 
 export default class AppSettings extends AppSettingsBase {
   constructor(swapAppService: ISwapAppService, options?: Partial<IAppSettingOption>) {
-    super(swapAppService, options);
+    super(swapAppService, AppSettingsType.AppSettings, options);
   }
 
   /**
