@@ -1,6 +1,7 @@
 # Safely Swap Azure App Service Slot v1
 
-[![build-test](https://github.com/mildronize/actions-az-webapp-swap/actions/workflows/test.yml/badge.svg)](https://github.com/mildronize/actions-az-webapp-swap/actions/workflows/test.yml)
+[![build-test](https://github.com/mildronize/actions-az-webapp-swap/actions/workflows/test.yml/badge.svg)](https://github.com/mildronize/actions-az-webapp-swap/actions/workflows/test.yml) 
+[![Coverage Status](https://coveralls.io/repos/github/mildronize/actions-az-webapp-swap/badge.svg?branch=main)](https://coveralls.io/github/mildronize/actions-az-webapp-swap?branch=main)
 
 Demo: https://www.youtube.com/watch?v=q5o6twX9gEg
 
