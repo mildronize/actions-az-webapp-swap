@@ -580,7 +580,9 @@ class AppSettingsMasking {
         this.type = type;
     }
     mask(appSettings, slot) {
-        const { appSettings: swapAppSettings } = this.swapAppService;
+        const swapAppSettings = this.type === AppSettingsBase_1.AppSettingsType.ConnectionStrings
+            ? this.swapAppService.connectionStrings
+            : this.swapAppService.appSettings;
         for (const swapAppSetting of swapAppSettings) {
             if (swapAppSetting.sensitive === true || this.type === AppSettingsBase_1.AppSettingsType.ConnectionStrings) {
                 const found = (0, swapAppSettingsUtility_1.findAppSettingName)(swapAppSetting.name, appSettings);
