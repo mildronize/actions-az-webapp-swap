@@ -110,7 +110,10 @@ const AppSettingsProviderFactory_1 = __nccwpck_require__(8131);
 const AppSettingsBase_1 = __nccwpck_require__(2797);
 const { WorkingDirectory, DefaultEncoding, gitConfig } = constants_1.constants;
 class GetDeploySlots {
-    constructor() { }
+    constructor(swapAppServiceList, options) {
+        this.swapAppServiceList = swapAppServiceList;
+        this.options = options;
+    }
     getAppSettingsAllSlots(type, swapAppService) {
         return __awaiter(this, void 0, void 0, function* () {
             const appSetting = AppSettingsProviderFactory_1.AppSettingsProviderFactory.getAppSettingsProvider(type, swapAppService);
@@ -137,13 +140,13 @@ class GetDeploySlots {
         fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(type, resourceGroup, name, slot), JSON.stringify(appSettingsSourceSlot, null, 2), DefaultEncoding);
         fs_1.default.writeFileSync(pathUtility.getAppSettingsPath(type, resourceGroup, name, targetSlot), JSON.stringify(appSettingsTargetSlot, null, 2), DefaultEncoding);
     }
-    execute(swapAppServiceList, options) {
+    execute() {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug(`Using get-deploy-slots mode`);
-            const { repo, path: targetPath, ref, token: personalAccessToken } = options;
+            const { repo, path: targetPath, ref, token: personalAccessToken } = this.options;
             const getAppSettingsWorkers = [];
             const getConnectionStringsWorkers = [];
-            for (const swapAppService of swapAppServiceList) {
+            for (const swapAppService of this.swapAppServiceList) {
                 getAppSettingsWorkers.push(this.getAppSettingsAllSlots(AppSettingsBase_1.AppSettingsType.AppSettings, swapAppService));
                 getConnectionStringsWorkers.push(this.getAppSettingsAllSlots(AppSettingsBase_1.AppSettingsType.ConnectionStrings, swapAppService));
             }
@@ -161,18 +164,18 @@ class GetDeploySlots {
              * Step 2: Commit Marked App Setting (Source Slot)
              */
             const pathUtility = new PathUtility_1.PathUtility(WorkingDirectory);
-            for (let i = 0; i < swapAppServiceList.length; i++) {
-                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.AppSettings, swapAppServiceList[i], appSettingsSlotList[i].appSettings);
-                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.ConnectionStrings, swapAppServiceList[i], connectionStringsSlotList[i].appSettings);
+            for (let i = 0; i < this.swapAppServiceList.length; i++) {
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.AppSettings, this.swapAppServiceList[i], appSettingsSlotList[i].appSettings);
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.ConnectionStrings, this.swapAppServiceList[i], connectionStringsSlotList[i].appSettings);
             }
             yield (0, githubUtiltiy_1.gitCommit)(Object.assign(Object.assign({}, sharedGitConfig), { targetPath, rootPath: WorkingDirectory, message: 'Get App Setting' }));
             pathUtility.clean();
             /**
              * Step 3: Simulate if values are swapped (Target Slot)
              */
-            for (let i = 0; i < swapAppServiceList.length; i++) {
-                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.AppSettings, swapAppServiceList[i], appSettingsSlotList[i].simulatedSwappedAppSettings);
-                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.ConnectionStrings, swapAppServiceList[i], connectionStringsSlotList[i].simulatedSwappedAppSettings);
+            for (let i = 0; i < this.swapAppServiceList.length; i++) {
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.AppSettings, this.swapAppServiceList[i], appSettingsSlotList[i].simulatedSwappedAppSettings);
+                this.writeAppSettingsFileSync(AppSettingsBase_1.AppSettingsType.ConnectionStrings, this.swapAppServiceList[i], connectionStringsSlotList[i].simulatedSwappedAppSettings);
             }
             // Create tmp file if no change it will be merge
             fs_1.default.writeFileSync(path_1.default.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`), 'Force Diff for Preview Change', DefaultEncoding);
@@ -530,6 +533,9 @@ class AppSettingsBase {
     getTarget() {
         return this.target;
     }
+    getOptions() {
+        return this.options;
+    }
 }
 exports.default = AppSettingsBase;
 
@@ -580,7 +586,9 @@ class AppSettingsMasking {
         this.type = type;
     }
     mask(appSettings, slot) {
-        const { appSettings: swapAppSettings } = this.swapAppService;
+        const swapAppSettings = this.type === AppSettingsBase_1.AppSettingsType.ConnectionStrings
+            ? this.swapAppService.connectionStrings
+            : this.swapAppService.appSettings;
         for (const swapAppSetting of swapAppSettings) {
             if (swapAppSetting.sensitive === true || this.type === AppSettingsBase_1.AppSettingsType.ConnectionStrings) {
                 const found = (0, swapAppSettingsUtility_1.findAppSettingName)(swapAppSetting.name, appSettings);
@@ -981,12 +989,12 @@ function main() {
             if (!input.path)
                 throw new Error(`path input is required on get-deploy-slots mode`);
             const { repo, token, ref, path } = input;
-            return yield new GetDeploySlots_1.GetDeploySlots().execute(swapAppService, {
+            return yield new GetDeploySlots_1.GetDeploySlots(swapAppService, {
                 repo,
                 token,
                 ref,
                 path,
-            });
+            }).execute();
         }
         if (input.mode === 'set-deploy-slots') {
             const swapAppService = safeParseJson(input.swapAppService);

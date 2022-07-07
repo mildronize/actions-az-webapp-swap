@@ -38,12 +38,12 @@ async function main() {
     if (!input.ref) throw new Error(`ref input is required on get-deploy-slots mode`);
     if (!input.path) throw new Error(`path input is required on get-deploy-slots mode`);
     const { repo, token, ref, path } = input;
-    return await new GetDeploySlots().execute(swapAppService, {
+    return await new GetDeploySlots(swapAppService, {
       repo,
       token,
       ref,
       path,
-    });
+    }).execute();
   }
   if (input.mode === 'set-deploy-slots') {
     const swapAppService = safeParseJson(input.swapAppService) as ISwapAppService;

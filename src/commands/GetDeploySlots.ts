@@ -28,7 +28,7 @@ interface IAppSettingsAllSlots {
 }
 
 export class GetDeploySlots {
-  constructor() {}
+  constructor(private swapAppServiceList: ISwapAppService[], private options: IGetDeploySlotsOption) {}
 
   private async getAppSettingsAllSlots(
     type: AppSettingsType,
@@ -72,13 +72,13 @@ export class GetDeploySlots {
     );
   }
 
-  public async execute(swapAppServiceList: ISwapAppService[], options: IGetDeploySlotsOption) {
+  public async execute() {
     core.debug(`Using get-deploy-slots mode`);
-    const { repo, path: targetPath, ref, token: personalAccessToken } = options;
+    const { repo, path: targetPath, ref, token: personalAccessToken } = this.options;
 
     const getAppSettingsWorkers: Promise<IAppSettingsAllSlots>[] = [];
     const getConnectionStringsWorkers: Promise<IAppSettingsAllSlots>[] = [];
-    for (const swapAppService of swapAppServiceList) {
+    for (const swapAppService of this.swapAppServiceList) {
       getAppSettingsWorkers.push(this.getAppSettingsAllSlots(AppSettingsType.AppSettings, swapAppService));
       getConnectionStringsWorkers.push(this.getAppSettingsAllSlots(AppSettingsType.ConnectionStrings, swapAppService));
     }
@@ -100,15 +100,15 @@ export class GetDeploySlots {
      * Step 2: Commit Marked App Setting (Source Slot)
      */
     const pathUtility = new PathUtility(WorkingDirectory);
-    for (let i = 0; i < swapAppServiceList.length; i++) {
+    for (let i = 0; i < this.swapAppServiceList.length; i++) {
       this.writeAppSettingsFileSync(
         AppSettingsType.AppSettings,
-        swapAppServiceList[i],
+        this.swapAppServiceList[i],
         appSettingsSlotList[i].appSettings
       );
       this.writeAppSettingsFileSync(
         AppSettingsType.ConnectionStrings,
-        swapAppServiceList[i],
+        this.swapAppServiceList[i],
         connectionStringsSlotList[i].appSettings
       );
     }
@@ -125,15 +125,15 @@ export class GetDeploySlots {
      * Step 3: Simulate if values are swapped (Target Slot)
      */
 
-    for (let i = 0; i < swapAppServiceList.length; i++) {
+    for (let i = 0; i < this.swapAppServiceList.length; i++) {
       this.writeAppSettingsFileSync(
         AppSettingsType.AppSettings,
-        swapAppServiceList[i],
+        this.swapAppServiceList[i],
         appSettingsSlotList[i].simulatedSwappedAppSettings
       );
       this.writeAppSettingsFileSync(
         AppSettingsType.ConnectionStrings,
-        swapAppServiceList[i],
+        this.swapAppServiceList[i],
         connectionStringsSlotList[i].simulatedSwappedAppSettings
       );
     }

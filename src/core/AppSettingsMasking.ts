@@ -13,7 +13,10 @@ export default class AppSettingsMasking {
   constructor(private swapAppService: ISwapAppService, private type: AppSettingsType) {}
 
   public mask(appSettings: IAppSetting[], slot?: string) {
-    const { appSettings: swapAppSettings } = this.swapAppService;
+    const swapAppSettings =
+      this.type === AppSettingsType.ConnectionStrings
+        ? this.swapAppService.connectionStrings
+        : this.swapAppService.appSettings;
 
     for (const swapAppSetting of swapAppSettings) {
       if (swapAppSetting.sensitive === true || this.type === AppSettingsType.ConnectionStrings) {

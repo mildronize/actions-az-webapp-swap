@@ -16,7 +16,7 @@ export interface IAppSettingOption {
   workingDirectory: string;
 }
 
-export default abstract class AppSettingsBase {
+export default class AppSettingsBase {
   protected source: IAppSetting[] = [];
   protected target: IAppSetting[] = [];
   protected options: IAppSettingOption = {
@@ -93,5 +93,9 @@ export default abstract class AppSettingsBase {
 
   public getTarget() {
     return this.target;
+  }
+
+  public getOptions() {
+    return this.options;
   }
 }
