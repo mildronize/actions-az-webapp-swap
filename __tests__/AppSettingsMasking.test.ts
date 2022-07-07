@@ -42,7 +42,7 @@ test('AppSettingsMasking.mask() (AppSettings) should return hash value in appSet
   ];
 
   const appSettingsMasking = new AppSettingsMasking(swapAppService, AppSettingsType.AppSettings);
-  expect(expected).toStrictEqual(appSettingsMasking.mask(appSettings, 'staging'));
+  expect(appSettingsMasking.mask(appSettings, 'staging')).toStrictEqual(expected);
 });
 
 test('AppSettingsMasking.mask() (AppSettings) should return actual value in appSettings if sensitive is false', () => {
