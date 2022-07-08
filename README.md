@@ -196,12 +196,22 @@ Write a JSON config file:
 - Sirinat Paphatsirinatthi ([@dmakeroam](https://github.com/dmakeroam))
 - Piti Champeethong ([@ninefyi](https://github.com/ninefyi))
 
-# Sponsorship
+# Sponsors
 
-<p align="center">
-  <a href="https://www.tt-ss.net/"><img src="docs/images/sponsor-tt-ss.jpg" alt=""></a>
-  <a href="https://www.tt-ss.net/">T.T. Software Solution</a>
-</p>
+<table>
+    <tr>
+        <td style="text-align:center;">
+            <div><a href="https://www.tt-ss.net/"><img src="docs/images/sponsor-tt-ss.jpg" width="200" alt=""></a></div>
+            <a href="https://www.tt-ss.net/">T.T. Software Solution</a>
+        </td>
+        <td style="text-align:center">
+            <div><a href="https://www.wrmsoftware.com/"><img src="docs/images/sponsor-wrmsoftware.png" width="200"
+                        alt=""></a></div>
+            <a href="https://www.wrmsoftware.com/">WRM Software</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
 
 ## TODO
 
