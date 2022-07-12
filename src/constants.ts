@@ -1,4 +1,23 @@
 import { WriteFileOptions } from 'fs';
+import path from 'path';
+
+interface IConstants {
+  FallbackValue: {
+    sensitive: boolean;
+    slotSetting: boolean;
+  };
+  DefaultEncoding: WriteFileOptions;
+  WorkingDirectory: {
+    root: string;
+    beforeSwap: string;
+    afterSwap: string;
+  };
+
+  gitConfig: {
+    name: string;
+    email: string;
+  };
+}
 
 export const constants: IConstants = {
   /**
@@ -9,22 +28,16 @@ export const constants: IConstants = {
     slotSetting: true,
   },
   DefaultEncoding: 'utf8',
-  WorkingDirectory: 'swap-tmp-path',
+  WorkingDirectory: {
+    root: 'app-settings',
+    beforeSwap: 'before-swap',
+    afterSwap: 'after-swap',
+  },
   gitConfig: {
     name: 'GitHub Action Swap Bot',
     email: 'github-swap-bot@github.com',
   },
 };
 
-interface IConstants {
-  FallbackValue: {
-    sensitive: boolean;
-    slotSetting: boolean;
-  };
-  DefaultEncoding: WriteFileOptions;
-  WorkingDirectory: string;
-  gitConfig: {
-    name: string;
-    email: string;
-  };
-}
+// constants.WorkingDirectory.beforeSwap = path.join(constants.WorkingDirectory.root, constants.WorkingDirectory.beforeSwap);
+// constants.WorkingDirectory.afterSwap = path.join(constants.WorkingDirectory.root, constants.WorkingDirectory.afterSwap);

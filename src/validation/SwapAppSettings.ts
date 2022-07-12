@@ -1,10 +1,4 @@
-import {
-  ISwapAppService,
-  DefaultSensitiveEnum,
-  DefaultSlotSettingEnum,
-  ISwapAppSetting,
-  IAppSetting,
-} from '../interfaces';
+import { ISwapAppService, DefaultSensitiveEnum, DefaultSlotSettingEnum, IAppSetting } from '../interfaces';
 import * as core from '@actions/core';
 
 export interface IValidateAppSettingsReturnType {
