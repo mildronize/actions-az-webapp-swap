@@ -1,21 +1,16 @@
 import * as core from '@actions/core';
+import * as artifact from '@actions/artifact';
 import fs from 'fs';
 import path from 'path';
 import { ISwapAppService, IAppSetting } from '../interfaces';
 import SwapAppSettings from '../core/SwapAppSettings';
-import { createBranchWhenNotExist, createPullRequest, gitCommit, gitCommitNewBranch } from '../utils/githubUtiltiy';
 import { PathUtility } from '../utils/PathUtility';
 import { constants } from '../constants';
 import { AppSettingsProviderFactory } from '../core/AppSettingsProviderFactory';
 import { AppSettingsType } from '../core/AppSettingsBase';
+import { getArtifactName } from '../utils/commonUtility';
+import { executeProcess } from '../utils/executeProcess';
 const { WorkingDirectory, DefaultEncoding, gitConfig } = constants;
-
-interface IGetDeploySlotsOption {
-  repo: string;
-  ref: string;
-  token: string;
-  path: string;
-}
 
 interface IAppSettingSlots {
   source: IAppSetting[];
@@ -28,7 +23,19 @@ interface IAppSettingsAllSlots {
 }
 
 export class GetDeploySlots {
-  constructor(private swapAppServiceList: ISwapAppService[], private options: IGetDeploySlotsOption) {}
+  constructor(private swapAppService: ISwapAppService) {}
+
+  private async uploadArtifact(artifactName: string, files: string[]) {
+    const artifactClient = artifact.create();
+    const rootDirectory = '.';
+    const options: artifact.UploadOptions = {
+      continueOnError: false,
+      retentionDays: 1,
+    };
+
+    const uploadResponse = await artifactClient.uploadArtifact(artifactName, files, rootDirectory, options);
+    core.info(`Upload artifact named, "${uploadResponse.artifactName}" completed!`);
+  }
 
   private async getAppSettingsAllSlots(
     type: AppSettingsType,
@@ -53,108 +60,77 @@ export class GetDeploySlots {
   private writeAppSettingsFileSync(
     type: AppSettingsType,
     swapAppService: ISwapAppService,
-    appSettingsSlots: IAppSettingSlots
-  ) {
-    const pathUtility = new PathUtility(WorkingDirectory);
+    appSettingsSlots: IAppSettingSlots,
+    rootPath: string
+  ): string[] {
+    const pathUtility = new PathUtility(rootPath);
     const { resourceGroup, name, slot, targetSlot } = swapAppService;
     const appSettingsSourceSlot = appSettingsSlots.source;
     const appSettingsTargetSlot = appSettingsSlots.target;
     pathUtility.createDir(resourceGroup);
-    fs.writeFileSync(
-      pathUtility.getAppSettingsPath(type, resourceGroup, name, slot),
-      JSON.stringify(appSettingsSourceSlot, null, 2),
-      DefaultEncoding
-    );
-    fs.writeFileSync(
-      pathUtility.getAppSettingsPath(type, resourceGroup, name, targetSlot),
-      JSON.stringify(appSettingsTargetSlot, null, 2),
-      DefaultEncoding
-    );
+    const sourceSlotPath = pathUtility.getAppSettingsPath(type, resourceGroup, name, slot);
+    const targetSlotPath = pathUtility.getAppSettingsPath(type, resourceGroup, name, targetSlot);
+    fs.writeFileSync(sourceSlotPath, JSON.stringify(appSettingsSourceSlot, null, 2), DefaultEncoding);
+    fs.writeFileSync(targetSlotPath, JSON.stringify(appSettingsTargetSlot, null, 2), DefaultEncoding);
+    return [sourceSlotPath, targetSlotPath];
   }
 
   public async execute() {
     core.debug(`Using get-deploy-slots mode`);
-    const { repo, path: targetPath, ref, token: personalAccessToken } = this.options;
+    const appSettingsSlot = await this.getAppSettingsAllSlots(AppSettingsType.AppSettings, this.swapAppService);
+    const connectionStringsSlot = await this.getAppSettingsAllSlots(
+      AppSettingsType.ConnectionStrings,
+      this.swapAppService
+    );
 
-    const getAppSettingsWorkers: Promise<IAppSettingsAllSlots>[] = [];
-    const getConnectionStringsWorkers: Promise<IAppSettingsAllSlots>[] = [];
-    for (const swapAppService of this.swapAppServiceList) {
-      getAppSettingsWorkers.push(this.getAppSettingsAllSlots(AppSettingsType.AppSettings, swapAppService));
-      getConnectionStringsWorkers.push(this.getAppSettingsAllSlots(AppSettingsType.ConnectionStrings, swapAppService));
-    }
+    const { beforeSwap, afterSwap, root: rootPath } = WorkingDirectory;
+    const beforeSwapPath = path.join(rootPath, beforeSwap);
+    const afterSwapPath = path.join(rootPath, afterSwap);
 
-    const appSettingsSlotList = await Promise.all(getAppSettingsWorkers);
-    const connectionStringsSlotList = await Promise.all(getConnectionStringsWorkers);
-
-    const sharedGitConfig = {
-      repo,
-      ref,
-      personalAccessToken,
-      name: gitConfig.name,
-      email: gitConfig.email,
-    };
-
-    await createBranchWhenNotExist(sharedGitConfig);
-
+    const outputPaths: string[] = [];
     /**
      * Step 2: Commit Marked App Setting (Source Slot)
      */
-    const pathUtility = new PathUtility(WorkingDirectory);
-    for (let i = 0; i < this.swapAppServiceList.length; i++) {
-      this.writeAppSettingsFileSync(
-        AppSettingsType.AppSettings,
-        this.swapAppServiceList[i],
-        appSettingsSlotList[i].appSettings
-      );
-      this.writeAppSettingsFileSync(
-        AppSettingsType.ConnectionStrings,
-        this.swapAppServiceList[i],
-        connectionStringsSlotList[i].appSettings
-      );
-    }
 
-    await gitCommit({
-      ...sharedGitConfig,
-      targetPath,
-      rootPath: WorkingDirectory,
-      message: 'Get App Setting',
-    });
-    pathUtility.clean();
+    outputPaths.push(
+      ...this.writeAppSettingsFileSync(
+        AppSettingsType.AppSettings,
+        this.swapAppService,
+        appSettingsSlot.appSettings,
+        beforeSwapPath
+      )
+    );
+    outputPaths.push(
+      ...this.writeAppSettingsFileSync(
+        AppSettingsType.ConnectionStrings,
+        this.swapAppService,
+        connectionStringsSlot.appSettings,
+        beforeSwapPath
+      )
+    );
 
     /**
      * Step 3: Simulate if values are swapped (Target Slot)
      */
 
-    for (let i = 0; i < this.swapAppServiceList.length; i++) {
-      this.writeAppSettingsFileSync(
+    outputPaths.push(
+      ...this.writeAppSettingsFileSync(
         AppSettingsType.AppSettings,
-        this.swapAppServiceList[i],
-        appSettingsSlotList[i].simulatedSwappedAppSettings
-      );
-      this.writeAppSettingsFileSync(
+        this.swapAppService,
+        appSettingsSlot.simulatedSwappedAppSettings,
+        afterSwapPath
+      )
+    );
+    outputPaths.push(
+      ...this.writeAppSettingsFileSync(
         AppSettingsType.ConnectionStrings,
-        this.swapAppServiceList[i],
-        connectionStringsSlotList[i].simulatedSwappedAppSettings
-      );
-    }
-
-    // Create tmp file if no change it will be merge
-    fs.writeFileSync(
-      path.resolve(WorkingDirectory, `timestamp-${new Date().getTime()}`),
-      'Force Diff for Preview Change',
-      DefaultEncoding
+        this.swapAppService,
+        connectionStringsSlot.simulatedSwappedAppSettings,
+        afterSwapPath
+      )
     );
 
-    const newBranch = await gitCommitNewBranch({
-      ...sharedGitConfig,
-      targetPath,
-      rootPath: WorkingDirectory,
-      message: 'Get App Setting if app service is swapped',
-    });
-
-    await createPullRequest({
-      ...sharedGitConfig,
-      sourceBranch: newBranch,
-    });
+    const { name, slot, targetSlot } = this.swapAppService;
+    await this.uploadArtifact(getArtifactName(name, slot, targetSlot), outputPaths);
   }
 }

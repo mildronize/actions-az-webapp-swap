@@ -24,9 +24,6 @@ inputs:
     required: false
     description: 'path to place app setting'
     default: '.'
-  swap-config:
-    required: false
-    description: 'swap-config'
 
 runs:
   using: 'node16'
