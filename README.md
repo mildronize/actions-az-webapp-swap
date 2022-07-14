@@ -3,13 +3,18 @@
 [![build-test](https://github.com/mildronize/actions-az-webapp-swap/actions/workflows/test.yml/badge.svg)](https://github.com/mildronize/actions-az-webapp-swap/actions/workflows/test.yml) 
 [![Coverage Status](https://coveralls.io/repos/github/mildronize/actions-az-webapp-swap/badge.svg?branch=main)](https://coveralls.io/github/mildronize/actions-az-webapp-swap?branch=main)
 
-Demo: https://www.youtube.com/watch?v=q5o6twX9gEg
+Have you ever swapped Azure App Service Slots for more than 30 sites?
 
-[Checkout Slide](https://docs.google.com/presentation/d/1vDox6HKISkUPyY_Jok39Dv9SHjrWa3CuJ9xLdaMXsUk/edit#slide=id.gc6f73a04f_0_0) for getting started the idea of this project.
+Swapping multiple Azure App Service Slots can cause some unwanted swapping of App Settings which might cause an incident in the production.
 
-## Award
+To prevent swapping the App Setting, we need to set `SlotSetting` parameters in the key/value of the App Settings, because default `SlotSetting` is false.
 
-Participant in the top 10 final round of [Microsoft Virtual Hackathon 2022](https://www.hackerearth.com/challenges/hackathon/microsoft-virtual-hackathon-2022/) June 28, 2022, GitHub Actions Theme
+To be more clear, 
+- watch YouTube demo: https://www.youtube.com/watch?v=q5o6twX9gEg
+
+- [Checkout Slide](https://docs.google.com/presentation/d/1vDox6HKISkUPyY_Jok39Dv9SHjrWa3CuJ9xLdaMXsUk/edit#slide=id.gc6f73a04f_0_0) for getting started the idea of this project.
+
+> :warning: WARNING: Using this Actions requires set App Settings and Connection String for modifying `SlotSetting` value in settings, because the Azure API doesn't allow us to modifying only `SlotSetting` value without touching actual value of settings, please run this action is non-production first to be make sure everything works as you expected.
 
 ## Features
 
@@ -25,6 +30,14 @@ Participant in the top 10 final round of [Microsoft Virtual Hackathon 2022](http
 This GitHub Actions is required to composition multiple GitHub Actions events for using full workflows as see figure:
 
 ![Workflow Composition](docs/images/workflow-composition.png)
+
+## Award
+
+Participant in the top 10 final round of [Microsoft Virtual Hackathon 2022](https://www.hackerearth.com/challenges/hackathon/microsoft-virtual-hackathon-2022/) June 28, 2022, GitHub Actions Theme
+
+![](./docs/images/ms-virtual-hackathorn-2022-top-10-final-round-cert.png)
+
+
 
 ## Example Usage 
 
