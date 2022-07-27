@@ -40,7 +40,7 @@
     "zod": "^3.17.3"
   },
   "devDependencies": {
-    "@swc/core": "^1.2.197",
+    "@swc/core": "^1.2.219",
     "@swc/helpers": "^0.3.17",
     "@types/common-tags": "^1.8.1",
     "@types/node": "^16.10.5",
