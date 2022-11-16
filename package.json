@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@swc/core": "^1.2.197",
-    "@swc/helpers": "^0.3.17",
+    "@swc/helpers": "^0.4.13",
     "@types/common-tags": "^1.8.1",
     "@types/node": "^16.10.5",
     "@vercel/ncc": "^0.31.1",
