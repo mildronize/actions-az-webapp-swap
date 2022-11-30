@@ -80,7 +80,7 @@ jobs:
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.azure_credentials }}
-      - uses: mildronize/actions-az-webapp-swap@v2.0.0
+      - uses: mildronize/actions-az-webapp-swap@v2.0.1
         with:
           mode: get-deploy-slots
           config: ${{ toJson(matrix) }}
@@ -92,7 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Create Swap Plan
-        uses: mildronize/actions-az-webapp-swap@v2.0.0
+        uses: mildronize/actions-az-webapp-swap@v2.0.1
         with: 
           mode: create-swap-plan
           token: ${{ secrets.PAT }}
@@ -117,7 +117,7 @@ jobs:
           creds: ${{ secrets.azure_credentials }}
       
       - name: set-slot-settings
-        uses: mildronize/actions-az-webapp-swap@v2.0.0
+        uses: mildronize/actions-az-webapp-swap@v2.0.1
         with: 
           mode: set-deploy-slots
           config: ${{ toJson(matrix) }}
@@ -142,7 +142,7 @@ jobs:
           creds: ${{ secrets.azure_credentials }}
       
       - name: set-slot-settings
-        uses: mildronize/actions-az-webapp-swap@v2.0.0
+        uses: mildronize/actions-az-webapp-swap@v2.0.1
         with: 
           mode: swap-slots
           config: ${{ toJson(matrix) }}
@@ -154,7 +154,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: clean
-        uses: mildronize/actions-az-webapp-swap@v2.0.0
+        uses: mildronize/actions-az-webapp-swap@v2.0.1
         with: 
           mode: clean
           token: ${{ secrets.PAT }}
@@ -170,7 +170,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: clean
-        uses: mildronize/actions-az-webapp-swap@v2.0.0
+        uses: mildronize/actions-az-webapp-swap@v2.0.1
         with: 
           mode: clean
           token: ${{ secrets.PAT }}

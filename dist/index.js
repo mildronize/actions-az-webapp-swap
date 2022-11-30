@@ -227,7 +227,7 @@ class GetDeploySlots {
     getAppSettingsAllSlots(type, swapAppService) {
         return __awaiter(this, void 0, void 0, function* () {
             const appSetting = AppSettingsProviderFactory_1.AppSettingsProviderFactory.getAppSettingsProvider(type, swapAppService);
-            (yield appSetting.list()).validate().fullfill().mask();
+            yield appSetting.loadAppSettings();
             const swapAppSettings = new SwapAppSettings_1.default(swapAppService);
             return {
                 appSettings: {
@@ -620,6 +620,14 @@ class AppSettingsBase {
         this.target = swapAppSettings.applyAppSetting(this.target);
         return this;
     }
+    /**
+     * Main entry for this class
+     */
+    loadAppSettings() {
+        return __awaiter(this, void 0, void 0, function* () {
+            (yield this.list()).validate().fullfill().mask();
+        });
+    }
     setWebAppSourceSlot() {
         this.setWebApp(this.source, this.swapAppService.slot);
     }
@@ -688,8 +696,14 @@ class AppSettingsMasking {
         const swapAppSettings = this.type === AppSettingsBase_1.AppSettingsType.ConnectionStrings
             ? this.swapAppService.connectionStrings
             : this.swapAppService.appSettings;
+        if (this.type === AppSettingsBase_1.AppSettingsType.ConnectionStrings) {
+            for (const appSetting of appSettings) {
+                appSetting.value = hashValue(appSetting.value);
+            }
+            return appSettings;
+        }
         for (const swapAppSetting of swapAppSettings) {
-            if (swapAppSetting.sensitive === true || this.type === AppSettingsBase_1.AppSettingsType.ConnectionStrings) {
+            if (swapAppSetting.sensitive === true) {
                 const found = (0, swapAppSettingsUtility_1.findAppSettingName)(swapAppSetting.name, appSettings);
                 if (found >= 0) {
                     const foundAppSetting = appSettings[found];
