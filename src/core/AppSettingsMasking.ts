@@ -18,8 +18,15 @@ export default class AppSettingsMasking {
         ? this.swapAppService.connectionStrings
         : this.swapAppService.appSettings;
 
+    if (this.type === AppSettingsType.ConnectionStrings) {
+      for (const appSetting of appSettings) {
+        appSetting.value = hashValue(appSetting.value);
+      }
+      return appSettings;
+    }
+
     for (const swapAppSetting of swapAppSettings) {
-      if (swapAppSetting.sensitive === true || this.type === AppSettingsType.ConnectionStrings) {
+      if (swapAppSetting.sensitive === true) {
         const found = findAppSettingName(swapAppSetting.name, appSettings);
         if (found >= 0) {
           const foundAppSetting = appSettings[found];

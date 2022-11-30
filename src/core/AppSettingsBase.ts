@@ -79,6 +79,14 @@ export default class AppSettingsBase {
     return this;
   }
 
+  /**
+   * Main entry for this class
+   */
+
+  public async loadAppSettings() {
+    (await this.list()).validate().fullfill().mask();
+  }
+
   public setWebAppSourceSlot() {
     this.setWebApp(this.source, this.swapAppService.slot);
   }

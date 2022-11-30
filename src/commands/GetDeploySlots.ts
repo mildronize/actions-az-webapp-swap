@@ -42,7 +42,7 @@ export class GetDeploySlots {
     swapAppService: ISwapAppService
   ): Promise<IAppSettingsAllSlots> {
     const appSetting = AppSettingsProviderFactory.getAppSettingsProvider(type, swapAppService);
-    (await appSetting.list()).validate().fullfill().mask();
+    await appSetting.loadAppSettings();
 
     const swapAppSettings = new SwapAppSettings(swapAppService);
     return {
