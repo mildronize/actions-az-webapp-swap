@@ -218,6 +218,58 @@ Write a JSON config file:
 ]
 ```
 
+
+## Create a Service Principle to Access the Azure Resources
+
+To handle with service principle, I've suggestion 2 ways based on scenarios:
+1. Create a Service Principle and assign Role & Scope at the same time
+    ```bash
+    az ad sp create-for-rbac --name "my-test-app" --role contributor --scopes /subscriptions/9eac942-xxxxxxxxx --sdk-auth
+    ```
+
+    Note: using [azure/login] GitHub Actions require flag `--sdk-auth`, 
+    even [this flag is deprecated](https://github.com/marketplace/actions/azure-login#configure-a-service-principal-with-a-secret).
+
+    To login, using `azure/login` Actions, 
+    ```yml
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure_credentials }}
+    ```
+
+    **Use Case:** This will suite with a few resource to handle
+
+2. Create a Service Principle without assigning any role assignment
+
+    ```bash
+    az ad sp create-for-rbac -n my-test-app --skip-assignment --sdk-auth
+    ```
+
+    Note: using [azure/login] GitHub Actions require flag `--sdk-auth`, even this flag is deprecated.
+
+    To support this service principle, the [azure/login] [support Support for using allow-no-subscriptions](https://github.com/marketplace/actions/azure-login#support-for-using-allow-no-subscriptions-flag-with-az-login)
+
+
+    To login, using `azure/login` Actions, 
+    ```yml
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure_credentials }}
+          allow-no-subscriptions: true
+    ```
+
+    Next step, you can assign this Service Principle in a Azure AD group, and assign role assignment (Access Control (IAM)) to the resource that you want to get access:
+
+    For example,
+
+    - Assign role assignment (Access Control (IAM)) to the resource that you want to get access:
+    
+        ![](docs/images/access-control.png)
+
+    - Assign this Service Principle in a Azure AD group:
+    
+        ![](docs/images/assign-service-principle-in-group.png)
+
 ## Azure Permission 
 
 To provide Least Privilege for Azure Resources: 
@@ -318,3 +370,7 @@ Microsoft.Web/sites/slots/operationresults/read
 ## TODO
 
 - [ ] Mask sensitive in log
+
+<!-- Link -->
+
+[azure/login]: https://github.com/marketplace/actions/azure-login
