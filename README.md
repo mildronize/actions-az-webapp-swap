@@ -218,6 +218,79 @@ Write a JSON config file:
 ]
 ```
 
+## Azure Permission 
+
+To provide Least Privilege for Azure Resources: 
+
+Read more:
+- [https://dev.to/michaelsrichter/how-to-deploy-to-azure-with-least-privilege-5cjc](https://dev.to/michaelsrichter/how-to-deploy-to-azure-with-least-privilege-5cjc)
+- [Azure Custom Role](https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles)
+  - [Create Custom Role by Portal](https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles-portal)
+  - [Create Custom Role by CLI](https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles-cli)
+
+
+## Create Azure Custom Role for this Actions
+
+Create a file `role.json` and save the JSON content below:
+
+```json
+{
+    "type": "Microsoft.Authorization/roleDefinitions",
+    "roleName": "prod-swap-slot",
+    "description": "Prod Swap Slot",
+    "assignableScopes": [
+        "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    ],
+    "name": "prod-swap-slot",
+    "roleType": "CustomRole",
+    "permissions": [
+        {
+            "actions": [
+                "Microsoft.Web/sites/slots/slotsswap/action",
+                "Microsoft.Web/sites/slots/config/list/Action",
+                "Microsoft.Web/sites/config/Read",
+                "Microsoft.Web/sites/config/list/Action",
+                "Microsoft.Web/sites/config/Write",
+                "Microsoft.Web/sites/slots/config/Write",
+                "microsoft.web/sites/slots/operationresults/read"
+            ],
+            "notActions": [],
+            "dataActions": [],
+            "notDataActions": []
+        }
+    ]
+}
+```
+
+Run this command to create a role.
+
+```bash
+az role definition create --role-definition role.json
+```
+
+
+### get-deploy-slot
+
+```
+Microsoft.Web/sites/slots/config/list/Action
+Microsoft.Web/sites/config/Read
+Microsoft.Web/sites/config/list/Action
+```
+
+### set-deploy-slot
+
+```
+Microsoft.Web/sites/config/Write
+Microsoft.Web/sites/slots/config/Write
+```
+
+### swap-slot
+
+```
+Microsoft.Web/sites/slots/slotsswap/action
+Microsoft.Web/sites/slots/operationresults/read
+```
+
 
 ## Authors
 
