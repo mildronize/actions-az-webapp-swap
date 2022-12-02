@@ -1,5 +1,4 @@
 import { WriteFileOptions } from 'fs';
-import path from 'path';
 
 interface IConstants {
   FallbackValue: {
@@ -38,6 +37,3 @@ export const constants: IConstants = {
     email: 'github-swap-bot@github.com',
   },
 };
-
-// constants.WorkingDirectory.beforeSwap = path.join(constants.WorkingDirectory.root, constants.WorkingDirectory.beforeSwap);
-// constants.WorkingDirectory.afterSwap = path.join(constants.WorkingDirectory.root, constants.WorkingDirectory.afterSwap);

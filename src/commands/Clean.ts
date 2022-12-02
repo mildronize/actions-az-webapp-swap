@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { renameRemoteBranch } from '../utils/githubUtiltiy';
+import { renameRemoteBranch } from '../utils/githubUtility';
 
 interface ICleanOptions {
   repo: string;

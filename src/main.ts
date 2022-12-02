@@ -1,11 +1,7 @@
 import * as core from '@actions/core';
+import { Clean, CreateSwapPlan, GetDeploySlots, SetDeploySlots, SwapSlots } from './commands';
 import { ISwapAppService } from './interfaces';
-import { GetDeploySlots } from './commands/GetDeploySlots';
-import { SetDeploySlots } from './commands/SetDeploySlots';
-import { SwapSlots } from './commands/SwapSlots';
 import { isEmptyString } from './utils/commonUtility';
-import { Clean } from './commands/Clean';
-import { CreateSwapPlan } from './commands/CreateSwapPlan';
 
 export type Mode = 'get-deploy-slots' | 'create-swap-plan' | 'set-deploy-slots' | 'swap-slots' | 'clean';
 

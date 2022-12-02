@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as artifact from '@actions/artifact';
 import fs from 'fs';
 import path from 'path';
-import { createBranchWhenNotExist, createPullRequest, gitCommit, gitCommitNewBranch } from '../utils/githubUtiltiy';
+import { createBranchWhenNotExist, createPullRequest, gitCommit, gitCommitNewBranch } from '../utils/githubUtility';
 import { constants } from '../constants';
 import { executeProcess } from '../utils/executeProcess';
 import { PathUtility } from '../utils/PathUtility';
