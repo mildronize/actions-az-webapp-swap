@@ -9,8 +9,8 @@ import { constants } from '../constants';
 import { AppSettingsProviderFactory } from '../core/AppSettingsProviderFactory';
 import { AppSettingsType } from '../core/AppSettingsBase';
 import { getArtifactName } from '../utils/commonUtility';
-import { executeProcess } from '../utils/executeProcess';
-const { WorkingDirectory, DefaultEncoding, gitConfig } = constants;
+
+const { WorkingDirectory, DefaultEncoding } = constants;
 
 interface IAppSettingSlots {
   source: IAppSetting[];

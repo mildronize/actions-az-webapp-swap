@@ -1,9 +1,7 @@
 import { executeBatchProcess, executeProcess, parseBufferToString } from './executeProcess';
 import { format } from 'date-fns';
-import * as core from '@actions/core';
 import { stripIndent } from 'common-tags';
 import path from 'path';
-import { title } from 'process';
 
 export const git = {
   add: (path: string) => `git add ${path}`,
@@ -85,7 +83,6 @@ export async function gitCommitNewBranch({
   message,
 }: IGit): Promise<string> {
   const tmpDir = `tmp-${new Date().getTime()}`;
-  // const newBranch = `${ref}-swap-${format(new Date(), 'yyyyMMdd')}T${format(new Date(), 'kkmmssX')}Z`;
   const newBranch = `${ref}-swap-${new Date().getTime()}`;
   await executeBatchProcess([
     git.clone(repo, personalAccessToken, tmpDir),
