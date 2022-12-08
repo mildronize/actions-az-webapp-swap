@@ -218,6 +218,9 @@ Write a JSON config file:
 ]
 ```
 
+## GitHub Tokens 
+
+- Assign permission `read:org, repo`
 
 ## Create a Service Principle to Access the Azure Resources
 
